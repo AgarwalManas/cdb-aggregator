@@ -20,13 +20,13 @@ Frontend is **React** either way (their frontend is React/React Native).
 
 ## Phase 0 — Foundation
 
-### [ ] Item 1 — Repo scaffold + backend decision
+### [x] Item 1 — Repo scaffold + backend decision
 **Produces:** a runnable skeleton repo (backend + `frontend/` placeholder), folder structure, dependency/config setup, a README stub with the CDBA/FDX framing up top, `.gitignore`, and a "hello world" health-check endpoint that runs locally.
 **Depends on:** nothing.
 **Kickoff prompt:**
 > New chat for my Wealthsimple open-banking project. Pull the build to-do list and research report from this project's history first. I'm starting **Item 1 — repo scaffold**. My backend choice is: **[Rails / FastAPI / Node]**. Scaffold the full repo skeleton, runnable locally, with a README stub framed around Consumer-Driven Banking + FDX.
 
-### [ ] Item 2 — FDX-aligned canonical data model
+### [x] Item 2 — FDX-aligned canonical data model
 **Produces:** the core domain types modeled on the FDX data model — `Account`, `Balance`, `Transaction`, `InvestmentHolding`, `Customer`, and `Consent` — with field validation and unit tests. This is the schema everything else maps into.
 **Depends on:** Item 1.
 **Kickoff prompt:**
