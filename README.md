@@ -107,6 +107,29 @@ Then visit:
 - <http://127.0.0.1:8000/health> — liveness probe
 - <http://127.0.0.1:8000/docs> — interactive OpenAPI docs
 
+### Run the mock FDX bank (Item 3)
+
+A standalone mock data provider that issues OAuth2 tokens and serves FDX-shaped
+JSON — the clean, standards-native source the normalizer will consume. Run it in
+a separate terminal:
+
+```bash
+uvicorn app.providers.mock_fdx_bank.app:app --app-dir backend --port 9001
+```
+
+Then exchange client credentials for a token and call a protected endpoint:
+
+```bash
+TOKEN=$(curl -s -X POST http://127.0.0.1:9001/oauth2/token \
+  -d grant_type=client_credentials \
+  -d client_id=cdb-aggregator -d client_secret=local-mock-secret \
+  | python -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+
+curl -s -H "Authorization: Bearer $TOKEN" http://127.0.0.1:9001/fdx/v6/accounts
+```
+
+See `backend/app/providers/mock_fdx_bank/README.md` for the full endpoint list.
+
 ### Run the tests
 
 ```bash

@@ -36,7 +36,7 @@ Frontend is **React** either way (their frontend is React/React Native).
 
 ## Phase 1 — Data ingestion & normalization
 
-### [ ] Item 3 — Mock FDX-compliant data provider #1
+### [x] Item 3 — Mock FDX-compliant data provider #1
 **Produces:** a small standalone mock "bank" server that returns **FDX-shaped JSON** and issues mock OAuth2 access tokens (token endpoint + a couple of protected resource endpoints). This is your clean, API-first, standards-native source.
 **Depends on:** Item 2.
 **Kickoff prompt:**

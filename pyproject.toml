@@ -9,6 +9,7 @@ dependencies = [
     "uvicorn[standard]>=0.29",
     "pydantic>=2.6",
     "pydantic-settings>=2.2",
+    "python-multipart>=0.0.9",  # OAuth2 token endpoint reads form-encoded bodies
 ]
 
 [project.optional-dependencies]

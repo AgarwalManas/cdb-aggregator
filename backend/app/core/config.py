@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     host: str = "127.0.0.1"
     port: int = 8000
 
+    # Mock data providers. Base URL of the FDX bank (Item 3); the Item 5 adapter
+    # reads from here. The messy source (Item 4) will add its own entry.
+    provider_fdx_base_url: str = "http://127.0.0.1:9001"
+
 
 @lru_cache
 def get_settings() -> Settings:
