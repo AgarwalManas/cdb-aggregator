@@ -1,0 +1,39 @@
+[project]
+name = "cdb-aggregator"
+version = "0.1.0"
+description = "FDX-aligned Consumer-Driven Banking aggregator with a first-class consent + traceability layer"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "httpx>=0.27",          # required by fastapi.testclient
+    "ruff>=0.4",            # lint + format
+]
+
+[tool.pytest.ini_options]
+# Make the `app` package importable without installing, and keep tests discoverable.
+pythonpath = ["backend"]
+testpaths = ["backend/tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["backend/app"]
