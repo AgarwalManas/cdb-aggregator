@@ -130,6 +130,18 @@ curl -s -H "Authorization: Bearer $TOKEN" http://127.0.0.1:9001/fdx/v6/accounts
 
 See `backend/app/providers/mock_fdx_bank/README.md` for the full endpoint list.
 
+### Run the legacy bank (Item 4)
+
+A second mock source with a deliberately **messy, non-FDX schema** (session auth,
+one nested blob, abbreviated fields, signed amounts, mixed date formats) — the
+hard case that justifies the normalizer:
+
+```bash
+uvicorn app.providers.legacy_bank.app:app --app-dir backend --port 9002
+```
+
+See `backend/app/providers/legacy_bank/README.md` for how it differs from FDX.
+
 ### Run the tests
 
 ```bash

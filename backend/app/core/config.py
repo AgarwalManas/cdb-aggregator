@@ -36,9 +36,10 @@ class Settings(BaseSettings):
     host: str = "127.0.0.1"
     port: int = 8000
 
-    # Mock data providers. Base URL of the FDX bank (Item 3); the Item 5 adapter
-    # reads from here. The messy source (Item 4) will add its own entry.
+    # Mock data providers. Base URLs the Item 5 adapters read from: the clean
+    # FDX bank (Item 3) and the messy legacy bank (Item 4).
     provider_fdx_base_url: str = "http://127.0.0.1:9001"
+    provider_legacy_base_url: str = "http://127.0.0.1:9002"
 
 
 @lru_cache

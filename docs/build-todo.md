@@ -42,7 +42,7 @@ Frontend is **React** either way (their frontend is React/React Native).
 **Kickoff prompt:**
 > Wealthsimple project, **Item 3 — mock FDX-compliant data provider**. Pull the to-do list and the canonical model (Item 2) from this project's history. Build a mock bank server returning FDX-shaped JSON with a mock OAuth2 token flow.
 
-### [ ] Item 4 — Mock bank source #2 (messy schema)
+### [x] Item 4 — Mock bank source #2 (messy schema)
 **Produces:** a second mock source with a **deliberately different / messy schema** (different field names, date formats, nested vs flat). Its purpose is to prove the normalizer can tame real-world inconsistency.
 **Depends on:** Item 2 (and conceptually Item 3 for contrast).
 **Kickoff prompt:**
