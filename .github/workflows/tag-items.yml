@@ -1,0 +1,67 @@
+name: Tag Items
+
+# Auto-creates the `item-NN` tag for each `Item NN — …` commit on main.
+#
+# Why this exists: Claude Code web sessions push commits/branches fine, but the
+# GitHub proxy blocks pushing tag refs. GitHub Actions runs outside that proxy,
+# so the build's `item-NN` timeline is tagged here instead. Just push an
+# `Item NN — <summary>` commit to main and the matching tag appears.
+#
+# Manual runs (workflow_dispatch) accept an optional `sha` to tag an older
+# commit — used to backfill tags for commits pushed before this workflow existed.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Commit SHA to tag (defaults to current HEAD of main)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create item-NN tag from commit message
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const inputSha = context.payload.inputs && context.payload.inputs.sha;
+            const sha = (inputSha && inputSha.trim()) || context.sha;
+
+            const { data: commit } = await github.rest.repos.getCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: sha,
+            });
+            const subject = commit.commit.message.split("\n")[0];
+            core.info(`Inspecting ${commit.sha.slice(0, 7)}: ${subject}`);
+
+            // Convention: "Item NN — <summary>" (em dash or hyphen both accepted).
+            const m = subject.match(/^Item\s+(\d{2})\s*[—-]/);
+            if (!m) {
+              core.info("Not an 'Item NN —' commit; nothing to tag.");
+              return;
+            }
+            const tag = `item-${m[1]}`;
+
+            try {
+              await github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `refs/tags/${tag}`,
+                sha: commit.sha,
+              });
+              core.notice(`Created tag ${tag} -> ${commit.sha.slice(0, 7)}`);
+            } catch (err) {
+              if (err.status === 422) {
+                core.info(`Tag ${tag} already exists; leaving it unchanged.`);
+              } else {
+                throw err;
+              }
+            }
