@@ -11,6 +11,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from fastapi.testclient import TestClient
 
 from app.consent import (
     GENESIS_HASH,
@@ -20,7 +21,8 @@ from app.consent import (
     SqliteAuditLog,
     create_audit_log,
 )
-from app.core.config import Settings
+from app.core.config import Settings, get_settings
+from app.main import create_app
 from app.models import ConsentScope
 
 BASE = datetime(2026, 1, 1, tzinfo=UTC)
@@ -122,6 +124,23 @@ def test_sqlite_persists_across_reopen(tmp_path) -> None:
     assert events[1].reason is DenialReason.SCOPE_NOT_GRANTED
     assert events[1].withheld == ("balances",)  # round-trips through JSON
     reopened.close()
+
+
+def test_sqlite_backend_works_under_the_server(tmp_path, monkeypatch) -> None:
+    # Regression: the ASGI server runs sync handlers across a threadpool, so the
+    # SQLite connection is reached from more than one thread. A thread-bound
+    # connection (the default) raises here; these requests must just work.
+    monkeypatch.setenv("CDB_AUDIT_BACKEND", "sqlite")
+    monkeypatch.setenv("CDB_SQLITE_PATH", str(tmp_path / "server.sqlite3"))
+    get_settings.cache_clear()
+    try:
+        client = TestClient(create_app())
+        assert client.get("/api/net-worth").status_code == 200  # a gated read -> audit write
+        verify = client.get("/api/audit/verify").json()
+        assert verify["valid"] is True
+        assert verify["checked"] > 0
+    finally:
+        get_settings.cache_clear()  # don't leak the sqlite backend into other tests
 
 
 def test_factory_selects_backend_from_config(tmp_path) -> None:

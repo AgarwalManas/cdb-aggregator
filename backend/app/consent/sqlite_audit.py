@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -57,62 +58,72 @@ class SqliteAuditLog:
     """Append-only, hash-chained audit log persisted in SQLite."""
 
     def __init__(self, path: str) -> None:
-        self._conn = sqlite3.connect(path)
-        self._conn.execute(_SCHEMA)
-        self._conn.commit()
+        # check_same_thread=False: the ASGI server runs sync handlers across a
+        # threadpool, so the connection is reached from more than one thread. An
+        # RLock serializes every access (and lets record() call head() while
+        # already holding it), keeping writes safe.
+        self._conn = sqlite3.connect(path, check_same_thread=False)
+        self._lock = threading.RLock()
+        with self._lock:
+            self._conn.execute(_SCHEMA)
+            self._conn.commit()
 
     def close(self) -> None:
-        self._conn.close()
+        with self._lock:
+            self._conn.close()
 
     # --- write ---------------------------------------------------------------
 
     def record(self, event: AuditEvent) -> AuditEvent:
-        prev_hash = self.head()
-        entry_hash = hash_event(event, prev_hash)
-        self._conn.execute(
-            """
-            INSERT INTO audit (
-                occurred_at, action, customer_id, recipient, scope, allowed,
-                account_id, reason, consent_id, record_count, withheld,
-                prev_hash, entry_hash
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                event.occurred_at.isoformat(),
-                event.action,
-                event.customer_id,
-                event.recipient,
-                event.scope.value,
-                1 if event.allowed else 0,
-                event.account_id,
-                event.reason.value if event.reason else None,
-                event.consent_id,
-                event.record_count,
-                json.dumps(list(event.withheld)),
-                prev_hash,
-                entry_hash,
-            ),
-        )
-        self._conn.commit()
+        with self._lock:
+            prev_hash = self.head()
+            entry_hash = hash_event(event, prev_hash)
+            self._conn.execute(
+                """
+                INSERT INTO audit (
+                    occurred_at, action, customer_id, recipient, scope, allowed,
+                    account_id, reason, consent_id, record_count, withheld,
+                    prev_hash, entry_hash
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    event.occurred_at.isoformat(),
+                    event.action,
+                    event.customer_id,
+                    event.recipient,
+                    event.scope.value,
+                    1 if event.allowed else 0,
+                    event.account_id,
+                    event.reason.value if event.reason else None,
+                    event.consent_id,
+                    event.record_count,
+                    json.dumps(list(event.withheld)),
+                    prev_hash,
+                    entry_hash,
+                ),
+            )
+            self._conn.commit()
         return event
 
     # --- read ----------------------------------------------------------------
 
     def head(self) -> str:
-        row = self._conn.execute(
-            "SELECT entry_hash FROM audit ORDER BY seq DESC LIMIT 1"
-        ).fetchone()
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT entry_hash FROM audit ORDER BY seq DESC LIMIT 1"
+            ).fetchone()
         return row[0] if row else GENESIS_HASH
 
     def _entries(self) -> list[ChainedEntry]:
-        rows = self._conn.execute(
-            """
-            SELECT occurred_at, action, customer_id, recipient, scope, allowed,
-                   account_id, reason, consent_id, record_count, withheld,
-                   prev_hash, entry_hash
-            FROM audit ORDER BY seq ASC
-            """
-        ).fetchall()
+        with self._lock:
+            rows = self._conn.execute(
+                """
+                SELECT occurred_at, action, customer_id, recipient, scope, allowed,
+                       account_id, reason, consent_id, record_count, withheld,
+                       prev_hash, entry_hash
+                FROM audit ORDER BY seq ASC
+                """
+            ).fetchall()
         return [_row_to_entry(row) for row in rows]
 
     def chain(self) -> tuple[ChainedEntry, ...]:
@@ -131,7 +142,8 @@ class SqliteAuditLog:
         return verify_chain(self._entries())
 
     def __len__(self) -> int:
-        return self._conn.execute("SELECT COUNT(*) FROM audit").fetchone()[0]
+        with self._lock:
+            return self._conn.execute("SELECT COUNT(*) FROM audit").fetchone()[0]
 
 
 def _row_to_entry(row: tuple) -> ChainedEntry:
