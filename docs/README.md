@@ -19,7 +19,6 @@ self-contained and any coding session (or reviewer) has the full picture.
   schema-validated against (drift fails the build), plus the canonical mapping.
 - **project-review.md** — a walkthrough script (problem, architecture, the consent
   layer, trade-offs, path to accreditation, Q&A).
-- **blog-post.md** — LinkedIn + blog drafts for sharing the project publicly.
 
 > These are planning artifacts, not claims of live regulatory integration. See
 > the root README for scope.
