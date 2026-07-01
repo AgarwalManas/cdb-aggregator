@@ -46,6 +46,7 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "raise NotImplementedError",
     "\\.\\.\\.",  # Protocol / abstractmethod stubs
+    "if TYPE_CHECKING:",  # type-only imports never run at runtime
 ]
 
 [tool.ruff]

@@ -21,6 +21,7 @@ threat-model note); here the chain and its verification are what matter.
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -67,7 +68,7 @@ class ChainVerification:
     broken_at: int | None = None  # index of the first entry that failed, if any
 
 
-def _hash_event(event: AuditEvent, prev_hash: str) -> str:
+def hash_event(event: AuditEvent, prev_hash: str) -> str:
     """Compute an entry's hash from a stable serialization of its content + prev_hash."""
     payload = "|".join(
         (
@@ -88,6 +89,19 @@ def _hash_event(event: AuditEvent, prev_hash: str) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
+def verify_chain(entries: Sequence[ChainedEntry]) -> ChainVerification:
+    """Re-walk a sequence of chained entries; report intactness and first break.
+
+    Shared by every audit backend so the tamper-evidence check is defined once.
+    """
+    prev = GENESIS_HASH
+    for index, entry in enumerate(entries):
+        if entry.prev_hash != prev or entry.entry_hash != hash_event(entry.event, prev):
+            return ChainVerification(valid=False, checked=len(entries), broken_at=index)
+        prev = entry.entry_hash
+    return ChainVerification(valid=True, checked=len(entries))
+
+
 class AuditLog:
     """Append-only, hash-chained store of :class:`AuditEvent` records."""
 
@@ -96,7 +110,7 @@ class AuditLog:
 
     def record(self, event: AuditEvent) -> AuditEvent:
         prev_hash = self.head()
-        self._entries.append(ChainedEntry(event, prev_hash, _hash_event(event, prev_hash)))
+        self._entries.append(ChainedEntry(event, prev_hash, hash_event(event, prev_hash)))
         return event
 
     def head(self) -> str:
@@ -108,12 +122,7 @@ class AuditLog:
 
     def verify(self) -> ChainVerification:
         """Re-walk the chain; report whether it's intact and where it first broke."""
-        prev = GENESIS_HASH
-        for index, entry in enumerate(self._entries):
-            if entry.prev_hash != prev or entry.entry_hash != _hash_event(entry.event, prev):
-                return ChainVerification(valid=False, checked=len(self._entries), broken_at=index)
-            prev = entry.entry_hash
-        return ChainVerification(valid=True, checked=len(self._entries))
+        return verify_chain(self._entries)
 
     def all(self) -> tuple[AuditEvent, ...]:
         return tuple(e.event for e in self._entries)

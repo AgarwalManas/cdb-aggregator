@@ -1,6 +1,6 @@
-# ADR 0006 — In-memory stores + mock providers (no database yet)
+# ADR 0006 — In-memory stores + mock providers (SQLite behind the seam)
 
-**Status:** Accepted (Items 3–11)
+**Status:** Accepted (Items 3–11); extended in item-25
 
 ## Context
 
@@ -21,6 +21,21 @@ So the sources and persistence are stand-ins.
 - A seeded **in-memory demo world** (`app.api.demo`) powers the dashboards with a
   realistic starting state, including a real audit trail.
 
+### Update (item-25): a real backend behind the seam
+
+To show the store interface is a genuine seam — not just a claim — the **audit
+log now has a second, durable backend**: `SqliteAuditLog` implements the exact
+same methods as the in-memory `AuditLog` (record / all / head / chain / verify /
+for_customer / for_consent / len), persisting the hash chain in SQLite. The
+backend is chosen by config (`CDB_AUDIT_BACKEND` = `memory` (default) | `sqlite`,
+`CDB_SQLITE_PATH`), so the reader and the API can't tell which one they hold.
+
+The audit log was picked first on purpose: its value *is* durability — a
+tamper-evident trail you can't keep isn't much of a trail. `ConsentStore` can
+follow the same pattern. Note the demo builds a fresh world per visitor session,
+so pointing it at `sqlite` shares one file across sessions (fine for a durability
+demo; the default `memory` keeps per-visitor isolation).
+
 ## Alternatives
 
 - **Stand up Postgres + real OAuth against a sandbox bank** — more "production
@@ -30,7 +45,7 @@ So the sources and persistence are stand-ins.
 ## Consequences
 
 - The repo runs offline with `pip install` + `npm install`; CI needs no services.
-- The store interfaces are the seam where a database drops in later; nothing above
-  them changes.
+- The store interfaces are the seam where a database drops in — demonstrated for
+  the audit log (SQLite), with nothing above it changing.
 - The build is honest about scope: it models the standard, it doesn't claim
   certified connectivity.

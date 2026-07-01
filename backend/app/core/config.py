@@ -36,6 +36,12 @@ class Settings(BaseSettings):
     host: str = "127.0.0.1"
     port: int = 8000
 
+    # Audit-log backend: "memory" (default) or "sqlite". The traceability log's
+    # value is durability, so it's the first store to get a real backend behind
+    # the store seam (item-25); ``sqlite_path`` is where the durable log lives.
+    audit_backend: str = "memory"
+    sqlite_path: str = "cdb-audit.sqlite3"
+
     # Optional path to the built React app (frontend/dist). When set to a real
     # directory, the API also serves the single-page app at "/", so one process
     # hosts both the API and the UI — that's what the container deploy uses

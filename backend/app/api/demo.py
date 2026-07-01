@@ -29,7 +29,10 @@ from app.consent import (
     ConsentEnforcingReader,
     ConsentGate,
     ConsentStore,
+    SqliteAuditLog,
+    create_audit_log,
 )
+from app.core.config import get_settings
 from app.models import (
     Account,
     AccountCategory,
@@ -70,7 +73,7 @@ class AggregatorState:
     """Everything the dashboards operate on."""
 
     store: ConsentStore
-    audit: AuditLog
+    audit: AuditLog | SqliteAuditLog
     connections: list[Connection]
     adapter: SourceAdapter
     customer_id: str = CUSTOMER_ID
@@ -278,7 +281,7 @@ def build_demo_state(now: datetime | None = None) -> AggregatorState:
     """Seed three connections and a mixed (allowed + denied) audit trail."""
     now = now or datetime.now(UTC)
     store = ConsentStore()
-    audit = AuditLog()
+    audit = create_audit_log(get_settings())
     connections: list[Connection] = []
     state = AggregatorState(
         store=store, audit=audit, connections=connections, adapter=_DemoAdapter(now)

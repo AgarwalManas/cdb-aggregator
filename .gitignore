@@ -31,3 +31,6 @@ yarn-error.log*
 .idea/
 .vscode/
 .DS_Store
+
+# Local SQLite audit store (item-25)
+*.sqlite3
