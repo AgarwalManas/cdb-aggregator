@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import {
   getAudit,
+  getAuditChain,
   getAuditVerify,
   getConnections,
   getSources,
@@ -9,6 +10,7 @@ import {
   revokeConnection,
 } from "../api.js";
 import AuditTable from "../components/AuditTable.jsx";
+import ChainVerifier from "../components/ChainVerifier.jsx";
 import ConnectForm from "../components/ConnectForm.jsx";
 import ConnectionCard from "../components/ConnectionCard.jsx";
 import { SkeletonCard } from "../components/Skeleton.jsx";
@@ -21,20 +23,23 @@ export default function ConsentPage({ scopeCatalog }) {
   const [connections, setConnections] = useState([]);
   const [audit, setAudit] = useState([]);
   const [verification, setVerification] = useState(null);
+  const [chain, setChain] = useState(null);
   const [sources, setSources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
   const refresh = useCallback(async () => {
-    const [conns, events, verify] = await Promise.all([
+    const [conns, events, verify, chainData] = await Promise.all([
       getConnections(),
       getAudit(),
       getAuditVerify(),
+      getAuditChain(),
     ]);
     setConnections(conns);
     setAudit(events);
     setVerification(verify);
+    setChain(chainData);
   }, []);
 
   useEffect(() => {
@@ -116,7 +121,10 @@ export default function ConsentPage({ scopeCatalog }) {
         {loading ? (
           <SkeletonCard lines={6} />
         ) : (
-          <AuditTable events={audit} catalog={scopeCatalog} verification={verification} />
+          <>
+            <ChainVerifier chain={chain} />
+            <AuditTable events={audit} catalog={scopeCatalog} verification={verification} />
+          </>
         )}
       </section>
     </>

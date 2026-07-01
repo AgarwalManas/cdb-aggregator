@@ -1079,6 +1079,44 @@ button:disabled {
   border-top: 1px solid var(--hairline);
 }
 
+/* User-verifiable audit log (item-30) */
+.verifier {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.verifier h3 {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 15px;
+}
+.verifier-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.verifier-actions button {
+  flex: 1;
+  min-width: 160px;
+}
+.verify-result {
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.verify-result.ok {
+  background: var(--accent-tint);
+  color: var(--accent);
+  border-left: 3px solid var(--accent);
+}
+.verify-result.broken {
+  background: var(--surface-2);
+  color: var(--ink);
+  border-left: 3px solid var(--ink);
+}
+
 /* An error stands out by contrast and weight, not by a new colour. */
 .error {
   background: var(--surface-2);

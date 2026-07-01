@@ -83,6 +83,38 @@ class ChainVerificationView(ApiModel):
     broken_at: int | None = None  # index of the first broken entry, if any
 
 
+class ChainEntryView(ApiModel):
+    """One chain entry, with the exact fields that go into its hash (item-30).
+
+    ``occurred_at`` is the literal ``isoformat()`` string the server hashed, so a
+    browser can rebuild the preimage byte-for-byte and recompute the SHA-256 —
+    the whole point is that the user doesn't have to trust the server's answer.
+    """
+
+    occurred_at: str
+    action: str
+    customer_id: str
+    recipient: str
+    scope: str
+    allowed: bool
+    account_id: str | None
+    reason: str | None
+    consent_id: str | None
+    record_count: int
+    withheld: list[str]
+    prev_hash: str
+    entry_hash: str
+
+
+class ChainView(ApiModel):
+    """The full hash chain, published so anyone can recompute it independently."""
+
+    algorithm: str  # "SHA-256"
+    genesis: str  # the seed prev-hash the first entry links to
+    head: str  # the published chain head (latest entry hash)
+    entries: list[ChainEntryView]
+
+
 class ComparisonRow(ApiModel):
     """One dimension contrasting screen-scraping with FDX open banking (item-20)."""
 

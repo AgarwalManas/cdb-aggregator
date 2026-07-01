@@ -18,6 +18,7 @@ export const getSources = () => request("/sources");
 export const getConnections = () => request("/connections");
 export const getAudit = () => request("/audit");
 export const getAuditVerify = () => request("/audit/verify"); // hash-chain integrity (item-22)
+export const getAuditChain = () => request("/audit/chain"); // full chain, for in-browser verify (item-30)
 
 // Old-way vs new-way contrast (item-20)
 export const getComparison = () => request("/comparison");

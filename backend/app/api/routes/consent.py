@@ -16,13 +16,16 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from app.api.demo import SOURCES, AggregatorState, Connection
 from app.api.dto import (
     AuditEventView,
+    ChainEntryView,
     ChainVerificationView,
+    ChainView,
     ConnectionView,
     GrantRequest,
     ScopeInfo,
     scope_catalog,
 )
 from app.api.session import SessionStore, get_state
+from app.consent import GENESIS_HASH
 from app.models import Consent
 
 router = APIRouter(prefix="/api", tags=["consent"])
@@ -135,4 +138,32 @@ def verify_audit(state: StateDep) -> ChainVerificationView:
     result = state.audit.verify()
     return ChainVerificationView(
         valid=result.valid, checked=result.checked, broken_at=result.broken_at
+    )
+
+
+@router.get("/audit/chain", summary="The full hash chain, for independent verification")
+def audit_chain(state: StateDep) -> ChainView:
+    """Publish the chain (head + every entry's hashed fields) so a browser can
+    recompute the SHA-256 links itself — append-only the user can *verify*, not
+    just append-only by assertion (item-30)."""
+    entries = [
+        ChainEntryView(
+            occurred_at=e.event.occurred_at.isoformat(),  # the exact string that was hashed
+            action=e.event.action,
+            customer_id=e.event.customer_id,
+            recipient=e.event.recipient,
+            scope=e.event.scope.value,
+            allowed=e.event.allowed,
+            account_id=e.event.account_id,
+            reason=e.event.reason.value if e.event.reason else None,
+            consent_id=e.event.consent_id,
+            record_count=e.event.record_count,
+            withheld=list(e.event.withheld),
+            prev_hash=e.prev_hash,
+            entry_hash=e.entry_hash,
+        )
+        for e in state.audit.chain()
+    ]
+    return ChainView(
+        algorithm="SHA-256", genesis=GENESIS_HASH, head=state.audit.head(), entries=entries
     )
