@@ -92,6 +92,12 @@ export default function ConsentPage({ scopeCatalog }) {
     <>
       {error && <div className="error">{error}</div>}
 
+      {!loading && chain && (
+        <div className="cc-header">
+          <ChainVerifier chain={chain} />
+        </div>
+      )}
+
       <nav className="subtabs" aria-label="Control Centre views">
         {SUBTABS.map(([key, label]) => (
           <button
@@ -155,25 +161,14 @@ export default function ConsentPage({ scopeCatalog }) {
       )}
 
       {sub === "logs" && (
-        <>
-          <section>
-            <h2>Verify integrity</h2>
-            {loading ? <SkeletonCard lines={3} /> : <ChainVerifier chain={chain} />}
-          </section>
-
-          <section>
-            <h2>Activity log</h2>
-            <p className="section-note">
-              Every access is recorded — allowed or denied — tied to the grant that permitted it.
-              Expand any row for the full receipt; tick rows and export the selection.
-            </p>
-            {loading ? (
-              <SkeletonCard lines={6} />
-            ) : (
-              <ActivityLog receipts={receipts} catalog={scopeCatalog} />
-            )}
-          </section>
-        </>
+        <section>
+          <h2>Activity log</h2>
+          <p className="section-note">
+            Every access is recorded — allowed or denied — tied to the grant that permitted it.
+            Expand any row for the full receipt; tick rows and export the selection.
+          </p>
+          {loading ? <SkeletonCard lines={6} /> : <ActivityLog receipts={receipts} />}
+        </section>
       )}
     </>
   );

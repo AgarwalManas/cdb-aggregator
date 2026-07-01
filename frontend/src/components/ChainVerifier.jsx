@@ -1,16 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-// User-verifiable audit log (item-30): the traceability log is a SHA-256 hash
-// chain, and this recomputes every link in the browser with Web Crypto — so the
-// user confirms the log is intact themselves, rather than trusting the server's
-// word. Also exports the log + proof for independent, offline verification.
+// User-verifiable audit log (item-30), as a compact top-right card (slice 5.1):
+// the log is a SHA-256 hash chain, and the browser recomputes every link with Web
+// Crypto to confirm nothing was altered. It auto-verifies on load (so "Verified
+// intact" is earned, not asserted); the ▾ menu simulates tampering and exports
+// the log + proof.
 
 async function sha256Hex(text) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// The exact preimage the server hashed — mirrors backend hash_event().
 function preimage(e, prevHash) {
   return [
     prevHash,
@@ -44,15 +44,28 @@ export default function ChainVerifier({ chain }) {
   const [result, setResult] = useState(null);
   const [tampered, setTampered] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const ref = useRef(null);
 
-  // A fresh chain (after a grant/revoke) invalidates any previous result.
   useEffect(() => {
-    setResult(null);
+    let alive = true;
     setTampered(false);
+    if (chain) recompute(chain).then((r) => alive && setResult(r));
+    return () => {
+      alive = false;
+    };
   }, [chain?.head]);
 
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onDown = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [menuOpen]);
+
   if (!chain) return null;
-  const shortHead = `${chain.head.slice(0, 10)}…${chain.head.slice(-8)}`;
 
   async function onVerify() {
     setBusy(true);
@@ -60,19 +73,16 @@ export default function ChainVerifier({ chain }) {
     setResult(await recompute(chain));
     setBusy(false);
   }
-
-  async function onSimulateTamper() {
+  async function onTamper() {
     setBusy(true);
     setTampered(true);
-    // Alter one record locally and prove the browser catches it — the server is
-    // untouched; this only edits the copy in your tab.
+    setMenuOpen(false);
     const entries = chain.entries.map((e, i) =>
       i === 0 ? { ...e, recordCount: e.recordCount + 1 } : e,
     );
     setResult(await recompute({ ...chain, entries }));
     setBusy(false);
   }
-
   function onDownload() {
     const blob = new Blob([JSON.stringify(chain, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -81,52 +91,53 @@ export default function ChainVerifier({ chain }) {
     a.download = "cdb-audit-chain.json";
     a.click();
     URL.revokeObjectURL(url);
+    setMenuOpen(false);
   }
 
+  const ok = result?.valid;
+  const status =
+    result == null
+      ? "Checking…"
+      : ok
+        ? "Verified intact"
+        : tampered
+          ? `Caught a simulated tamper (entry ${result.brokenAt})`
+          : "Chain broken";
+
   return (
-    <div className="card verifier">
-      <div className="card-head">
-        <h3>Verify it yourself</h3>
-        <span className="badge chain chain-ok" title="The log is a SHA-256 hash chain">
-          SHA-256
+    <div className={`log-integrity ${result && !ok ? "broken" : ""}`} ref={ref}>
+      <div className="li-status">
+        <span className="li-icon" aria-hidden="true">
+          ◈
         </span>
-      </div>
-      <p className="section-note">
-        Don&apos;t take the server&apos;s word for it. The log is a hash chain — your browser can
-        recompute every link with Web Crypto and confirm nothing was altered.
-      </p>
-      <dl className="authority-meta">
         <div>
-          <dt>Entries</dt>
-          <dd>{chain.entries.length}</dd>
+          <span className="li-title">Log integrity</span>
+          <span className={`li-value ${ok ? "ok" : result ? "bad" : ""}`}>{status}</span>
         </div>
-        <div>
-          <dt>Published head</dt>
-          <dd>
-            <code>{shortHead}</code>
-          </dd>
-        </div>
-      </dl>
-      <div className="verifier-actions">
-        <button className="btn-primary" disabled={busy} onClick={onVerify}>
-          Verify in your browser
-        </button>
-        <button className="btn-revoke" disabled={busy} onClick={onSimulateTamper}>
-          Simulate tampering
-        </button>
-        <button className="btn-revoke" disabled={busy} onClick={onDownload}>
-          Download log + proof
-        </button>
       </div>
-      {result && (
-        <div className={`verify-result ${result.valid ? "ok" : "broken"}`}>
-          {result.valid
-            ? `Intact — ${result.checked} entries recomputed in your browser, and the head matches.`
-            : tampered
-              ? `Caught it — the altered record breaks the chain at entry ${result.brokenAt}. The real log is untouched.`
-              : `Tampered — the chain breaks at entry ${result.brokenAt}.`}
-        </div>
-      )}
+      <div className="li-actions">
+        <button type="button" className="btn-revoke" disabled={busy} onClick={onVerify}>
+          Verify log integrity
+        </button>
+        <button
+          type="button"
+          className="li-more"
+          aria-label="More integrity actions"
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          ▾
+        </button>
+        {menuOpen && (
+          <div className="export-menu li-menu" role="menu">
+            <button type="button" role="menuitem" onClick={onTamper}>
+              Simulate tampering
+            </button>
+            <button type="button" role="menuitem" onClick={onDownload}>
+              Download log + proof
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

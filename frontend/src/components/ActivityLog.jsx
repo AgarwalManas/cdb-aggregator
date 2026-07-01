@@ -2,10 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { formatDateTime } from "../format.js";
 
-// Activity Log (slice 5): one table that merges the audit trail and the access
-// receipts. Filter / sort / search, tick rows to select, expand any row into its
-// full receipt, and export the selection in several formats. Driven entirely by
-// /api/receipts, which already carries who / what / grant / disclosed / why.
+// Activity Log (slice 5.2): one table merging the audit trail and the access
+// receipts. A date-range filter, a single Filters popover exposing every column,
+// free-text search, tick-to-select, expandable full receipts, and multi-format
+// export (per-row and for the selection) with a proper letterhead PDF.
 
 const COLUMNS = [
   "Receipt",
@@ -18,6 +18,34 @@ const COLUMNS = [
   "Disclosed",
   "Withheld",
   "Grant",
+];
+
+const DAY = 86400000;
+const DATE_PRESETS = [
+  ["all", "All time", () => null],
+  ["day", "Last day", (now) => now - DAY],
+  ["week", "Last week", (now) => now - 7 * DAY],
+  ["month", "Last month", (now) => now - 30 * DAY],
+  ["3m", "Last 3 months", (now) => now - 91 * DAY],
+  ["6m", "Last 6 months", (now) => now - 182 * DAY],
+  ["12m", "Last 12 months", (now) => now - 365 * DAY],
+  ["ytd", "Year to date", (now) => new Date(new Date(now).getFullYear(), 0, 1).getTime()],
+];
+
+const FILTER_FIELDS = [
+  ["by", "By", (r) => r.accessorLabel],
+  ["action", "Action", (r) => r.purpose],
+  ["scope", "Scope", (r) => r.clusterLabel],
+  ["account", "Account", (r) => r.accountId],
+  ["decision", "Decision", (r) => (r.allowed ? "Allowed" : "Denied")],
+  ["grant", "Grant", (r) => r.authorizingConsentId],
+];
+
+const EXPORT_OPTS = [
+  ["Markdown (.md)", "md"],
+  ["CSV (.csv)", "csv"],
+  ["JSON (.json)", "json"],
+  ["PDF (.pdf)", "pdf"],
 ];
 
 function summaryRow(r) {
@@ -47,17 +75,11 @@ const download = (name, text, mime) => {
 
 const csvCell = (v) => `"${String(v).replace(/"/g, '""')}"`;
 const mdCell = (v) => String(v).replace(/\|/g, "\\|");
-const esc = (v) =>
-  String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const esc = (v) => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 function toJSON(rows, enhanced) {
-  return JSON.stringify(
-    rows.map((r) => (enhanced ? r : summaryRow(r))),
-    null,
-    2,
-  );
+  return JSON.stringify(rows.map((r) => (enhanced ? r : summaryRow(r))), null, 2);
 }
-
 function toCSV(rows, enhanced) {
   const cols = enhanced ? [...COLUMNS, "Fields", "Why"] : COLUMNS;
   const header = cols.map(csvCell).join(",");
@@ -69,14 +91,10 @@ function toCSV(rows, enhanced) {
   });
   return [header, ...lines].join("\n");
 }
-
 function toMarkdown(rows, enhanced) {
   const header = `| ${COLUMNS.join(" | ")} |`;
   const rule = `| ${COLUMNS.map(() => "---").join(" | ")} |`;
-  const body = rows.map((r) => {
-    const s = summaryRow(r);
-    return `| ${COLUMNS.map((c) => mdCell(s[c])).join(" | ")} |`;
-  });
+  const body = rows.map((r) => `| ${COLUMNS.map((c) => mdCell(summaryRow(r)[c])).join(" | ")} |`);
   let out = [header, rule, ...body].join("\n");
   if (enhanced) {
     out +=
@@ -88,7 +106,7 @@ function toMarkdown(rows, enhanced) {
   return out;
 }
 
-function printReceipts(rows, enhanced) {
+function printPdf(rows, enhanced, meta) {
   const win = window.open("", "_blank");
   if (!win) return;
   const head = COLUMNS.map((c) => `<th>${c}</th>`).join("");
@@ -97,61 +115,95 @@ function printReceipts(rows, enhanced) {
       const s = summaryRow(r);
       const cells = COLUMNS.map((c) => `<td>${esc(s[c])}</td>`).join("");
       const detail = enhanced
-        ? `<tr><td colspan="${COLUMNS.length}" class="d"><b>Why:</b> ${esc(r.why)}<br><b>Fields:</b> ${esc(r.fields.join(", "))}</td></tr>`
+        ? `<tr class="d"><td colspan="${COLUMNS.length}"><b>Accessor:</b> ${esc(r.accessor)} &nbsp; <b>Why:</b> ${esc(r.why)} &nbsp; <b>Fields:</b> ${esc(r.fields.join(", "))}</td></tr>`
         : "";
       return `<tr>${cells}</tr>${detail}`;
     })
     .join("");
+  const single = rows.length === 1 ? rows[0] : null;
+  const accounts = [...new Set(rows.map((r) => r.accountId).filter(Boolean))];
+  const metaRows = [
+    ["Account holder", meta.holder],
+    ["Generated", meta.generated],
+    ["Records", String(rows.length)],
+    single ? ["Receipt", single.receiptId] : null,
+    single ? ["Account", single.accountId || "—"] : ["Accounts", accounts.join(", ") || "—"],
+  ]
+    .filter(Boolean)
+    .map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`)
+    .join("");
   win.document.write(
-    `<html><head><title>Access receipts</title><style>body{font-family:system-ui,sans-serif;font-size:12px;padding:24px}h2{font-family:monospace}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:6px;text-align:left}th{background:#f2f2f2}.d{background:#fafafa;font-size:11px}</style></head><body><h2>Access receipts (${rows.length})</h2><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></body></html>`,
+    `<html><head><title>CDB Aggregator — access log</title><style>
+      body{font-family:system-ui,-apple-system,sans-serif;color:#1a1f2b;padding:40px;font-size:12px}
+      .lh{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #10695C;padding-bottom:12px;margin-bottom:16px}
+      .brand{font-size:20px;font-weight:700;font-family:ui-monospace,monospace;color:#10695C}
+      .doc{font-size:13px;color:#555}
+      table.meta{border-collapse:collapse;margin-bottom:18px;font-size:12px}
+      table.meta td{padding:2px 22px 2px 0}
+      table.meta td:first-child{color:#888}
+      table.log{border-collapse:collapse;width:100%}
+      table.log th,table.log td{border:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top}
+      table.log th{background:#f4f6f8;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#555}
+      tr.d td{background:#fafbfc;font-size:11px;color:#444}
+      .foot{margin-top:20px;font-size:10px;color:#999}
+    </style></head><body>
+      <div class="lh"><div class="brand">CDB Aggregator</div><div class="doc">Access log — receipts</div></div>
+      <table class="meta">${metaRows}</table>
+      <table class="log"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
+      <div class="foot">FDX-aligned consent &amp; traceability demo · Demo data — not a statement of live regulatory integration.</div>
+    </body></html>`,
   );
   win.document.close();
   win.focus();
   win.print();
 }
 
-const EXPORTS = [
-  ["Markdown (.md)", (rows, enh) => download("access-log.md", toMarkdown(rows, enh), "text/markdown")],
-  ["CSV / Excel (.csv)", (rows, enh) => download("access-log.csv", toCSV(rows, enh), "text/csv")],
-  ["JSON (.json)", (rows, enh) => download("access-log.json", toJSON(rows, enh), "application/json")],
-  ["Print / Save as PDF", (rows, enh) => printReceipts(rows, enh)],
-];
+function runExport(kind, rows, enhanced, meta) {
+  if (kind === "md") download("access-log.md", toMarkdown(rows, enhanced), "text/markdown");
+  else if (kind === "csv") download("access-log.csv", toCSV(rows, enhanced), "text/csv");
+  else if (kind === "json") download("access-log.json", toJSON(rows, enhanced), "application/json");
+  else printPdf(rows, enhanced, meta);
+}
 
-export default function ActivityLog({ receipts, catalog }) {
-  const [actor, setActor] = useState("all");
-  const [decision, setDecision] = useState("all");
-  const [scope, setScope] = useState("all");
+const distinct = (rows, get) =>
+  Array.from(new Set(rows.map(get).filter((v) => v != null && v !== ""))).sort();
+
+export default function ActivityLog({ receipts, holder = "Ada Lovelace" }) {
+  const [range, setRange] = useState("all");
+  const [filters, setFilters] = useState({});
   const [query, setQuery] = useState("");
   const [sortDir, setSortDir] = useState("desc");
   const [selected, setSelected] = useState(() => new Set());
   const [openId, setOpenId] = useState(null);
   const [enhanced, setEnhanced] = useState(true);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef(null);
+  const [menu, setMenu] = useState(null); // "date" | "filters" | "export" | `row:<id>` | null
+  const rootRef = useRef(null);
 
   useEffect(() => {
-    if (!menuOpen) return undefined;
+    if (!menu) return undefined;
     const onDown = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+      if (!e.target.closest(".js-menu")) setMenu(null);
     };
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
-  }, [menuOpen]);
+  }, [menu]);
 
-  const scopes = useMemo(
-    () => Array.from(new Set((receipts || []).map((r) => r.clusterLabel))).sort(),
-    [receipts],
-  );
+  const options = useMemo(() => {
+    const rows = receipts || [];
+    return Object.fromEntries(FILTER_FIELDS.map(([key, , get]) => [key, distinct(rows, get)]));
+  }, [receipts]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
+    const now = Date.now();
+    const cutoff = (DATE_PRESETS.find((p) => p[0] === range) || DATE_PRESETS[0])[2](now);
     const rows = (receipts || []).filter((r) => {
-      if (actor !== "all" && r.accessorType !== actor) return false;
-      if (decision === "allowed" && !r.allowed) return false;
-      if (decision === "denied" && r.allowed) return false;
-      if (scope !== "all" && r.clusterLabel !== scope) return false;
+      if (cutoff != null && new Date(r.occurredAt).getTime() < cutoff) return false;
+      for (const [key, , get] of FILTER_FIELDS) {
+        if (filters[key] && filters[key] !== "all" && String(get(r)) !== filters[key]) return false;
+      }
       if (q) {
-        const hay = [r.purpose, r.accessorLabel, r.clusterLabel, r.accountId, r.why]
+        const hay = [r.purpose, r.accessorLabel, r.clusterLabel, r.accountId, r.why, r.authorizingConsentId]
           .filter(Boolean)
           .join(" ")
           .toLowerCase();
@@ -160,68 +212,108 @@ export default function ActivityLog({ receipts, catalog }) {
       return true;
     });
     const dir = sortDir === "asc" ? 1 : -1;
-    return [...rows].sort((a, b) => (a.occurredAt < b.occurredAt ? -dir : a.occurredAt > b.occurredAt ? dir : 0));
-  }, [receipts, actor, decision, scope, query, sortDir]);
+    return [...rows].sort((a, b) =>
+      a.occurredAt < b.occurredAt ? -dir : a.occurredAt > b.occurredAt ? dir : 0,
+    );
+  }, [receipts, range, filters, query, sortDir]);
 
   if (!receipts) return null;
 
-  const exportRows = selected.size
-    ? visible.filter((r) => selected.has(r.receiptId))
-    : visible;
+  const meta = { holder, generated: new Date().toLocaleString() };
+  const exportRows = selected.size ? visible.filter((r) => selected.has(r.receiptId)) : visible;
   const allSelected = visible.length > 0 && visible.every((r) => selected.has(r.receiptId));
+  const activeFilters = FILTER_FIELDS.filter(([k]) => filters[k] && filters[k] !== "all").length;
+  const rangeLabel = (DATE_PRESETS.find((p) => p[0] === range) || DATE_PRESETS[0])[1];
 
-  function toggleAll() {
-    setSelected((prev) => {
-      if (visible.every((r) => prev.has(r.receiptId))) return new Set();
-      return new Set(visible.map((r) => r.receiptId));
-    });
-  }
-  function toggleOne(id) {
+  const toggleAll = () =>
+    setSelected((prev) =>
+      visible.every((r) => prev.has(r.receiptId))
+        ? new Set()
+        : new Set(visible.map((r) => r.receiptId)),
+    );
+  const toggleOne = (id) =>
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-  }
-  function clearFilters() {
-    setActor("all");
-    setDecision("all");
-    setScope("all");
+  const setFilter = (key, value) => setFilters((f) => ({ ...f, [key]: value }));
+  const clearFilters = () => {
+    setFilters({});
     setQuery("");
-  }
+    setRange("all");
+  };
 
   return (
-    <div className="log">
+    <div className="log" ref={rootRef}>
       <div className="log-bar">
         <div className="log-controls">
-          <select aria-label="Filter by actor" value={actor} onChange={(e) => setActor(e.target.value)}>
-            <option value="all">All actors</option>
-            <option value="aggregator">Aggregator</option>
-            <option value="agent">Assistant</option>
-            <option value="counterparty">Counterparty</option>
-          </select>
-          <select
-            aria-label="Filter by decision"
-            value={decision}
-            onChange={(e) => setDecision(e.target.value)}
-          >
-            <option value="all">All decisions</option>
-            <option value="allowed">Allowed</option>
-            <option value="denied">Denied</option>
-          </select>
-          <select aria-label="Filter by scope" value={scope} onChange={(e) => setScope(e.target.value)}>
-            <option value="all">All scopes</option>
-            {scopes.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+          <div className="js-menu date-wrap">
+            <button
+              type="button"
+              className="filter-btn"
+              onClick={() => setMenu(menu === "date" ? null : "date")}
+            >
+              📅 {rangeLabel} ▾
+            </button>
+            {menu === "date" && (
+              <div className="export-menu date-menu" role="menu">
+                <span className="menu-heading">Preset ranges</span>
+                {DATE_PRESETS.map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className={range === key ? "active" : ""}
+                    onClick={() => {
+                      setRange(key);
+                      setMenu(null);
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="js-menu filter-wrap">
+            <button
+              type="button"
+              className="filter-btn"
+              onClick={() => setMenu(menu === "filters" ? null : "filters")}
+            >
+              ⚙ Filters{activeFilters ? ` (${activeFilters})` : ""}
+            </button>
+            {menu === "filters" && (
+              <div className="filter-panel">
+                {FILTER_FIELDS.map(([key, label]) => (
+                  <label key={key} className="filter-field">
+                    <span>{label}</span>
+                    <select
+                      value={filters[key] || "all"}
+                      onChange={(e) => setFilter(key, e.target.value)}
+                    >
+                      <option value="all">All</option>
+                      {(key === "decision" ? ["Allowed", "Denied"] : options[key]).map((v) => (
+                        <option key={v} value={v}>
+                          {v}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+                <button type="button" className="link filter-clear" onClick={() => setFilters({})}>
+                  Clear filters
+                </button>
+              </div>
+            )}
+          </div>
+
           <input
             type="search"
             className="log-search"
-            placeholder="Search the log…"
+            placeholder="Search by account, action, scope or grant…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             aria-label="Search the log"
@@ -231,22 +323,26 @@ export default function ActivityLog({ receipts, catalog }) {
         <div className="log-export">
           <label className="enhanced-toggle" title="Include full receipt detail in exports">
             <input type="checkbox" checked={enhanced} onChange={() => setEnhanced((v) => !v)} />
-            Enhanced
+            Enhanced download
           </label>
-          <div className="export-wrap" ref={menuRef}>
-            <button type="button" className="btn-revoke" onClick={() => setMenuOpen((v) => !v)}>
-              Export {selected.size ? `(${selected.size})` : `(${visible.length})`} ▾
+          <div className="js-menu export-wrap">
+            <button
+              type="button"
+              className="btn-primary export-btn"
+              onClick={() => setMenu(menu === "export" ? null : "export")}
+            >
+              ⬆ Export {selected.size ? `(${selected.size})` : `(${visible.length})`} ▾
             </button>
-            {menuOpen && (
+            {menu === "export" && (
               <div className="export-menu" role="menu">
-                {EXPORTS.map(([label, fn]) => (
+                {EXPORT_OPTS.map(([label, kind]) => (
                   <button
-                    key={label}
+                    key={kind}
                     type="button"
                     role="menuitem"
                     onClick={() => {
-                      fn(exportRows, enhanced);
-                      setMenuOpen(false);
+                      runExport(kind, exportRows, enhanced, meta);
+                      setMenu(null);
                     }}
                   >
                     {label}
@@ -294,7 +390,10 @@ export default function ActivityLog({ receipts, catalog }) {
                     className="th-sort"
                     onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
                   >
-                    When <span className="sort-caret" aria-hidden="true">{sortDir === "asc" ? "▲" : "▼"}</span>
+                    When{" "}
+                    <span className="sort-caret" aria-hidden="true">
+                      {sortDir === "asc" ? "▲" : "▼"}
+                    </span>
                   </button>
                 </th>
                 <th>By</th>
@@ -303,25 +402,26 @@ export default function ActivityLog({ receipts, catalog }) {
                 <th>Account</th>
                 <th>Decision</th>
                 <th>Disclosed</th>
+                <th>Withheld</th>
                 <th>Grant</th>
+                <th className="col-caret" aria-label="Details" />
               </tr>
             </thead>
             <tbody>
-              {visible.map((r) => {
-                const open = openId === r.receiptId;
-                return (
-                  <FragmentRow
-                    key={r.receiptId}
-                    receipt={r}
-                    open={open}
-                    selected={selected.has(r.receiptId)}
-                    catalog={catalog}
-                    onToggleSelect={() => toggleOne(r.receiptId)}
-                    onToggleOpen={() => setOpenId(open ? null : r.receiptId)}
-                    enhanced={enhanced}
-                  />
-                );
-              })}
+              {visible.map((r) => (
+                <LogRow
+                  key={r.receiptId}
+                  receipt={r}
+                  open={openId === r.receiptId}
+                  selected={selected.has(r.receiptId)}
+                  enhanced={enhanced}
+                  meta={meta}
+                  menuOpen={menu === `row:${r.receiptId}`}
+                  onMenu={(v) => setMenu(v ? `row:${r.receiptId}` : null)}
+                  onToggleSelect={() => toggleOne(r.receiptId)}
+                  onToggleOpen={() => setOpenId(openId === r.receiptId ? null : r.receiptId)}
+                />
+              ))}
             </tbody>
           </table>
         </div>
@@ -330,7 +430,12 @@ export default function ActivityLog({ receipts, catalog }) {
   );
 }
 
-function FragmentRow({ receipt: r, open, selected, onToggleSelect, onToggleOpen, enhanced }) {
+function LogRow({ receipt: r, open, selected, enhanced, meta, menuOpen, onMenu, onToggleSelect, onToggleOpen }) {
+  const cell = (children, extra = "") => (
+    <td className={`row-click ${extra}`} onClick={onToggleOpen}>
+      {children}
+    </td>
+  );
   return (
     <>
       <tr className={`${r.allowed ? "" : "denied"} ${open ? "row-open" : ""}`}>
@@ -342,84 +447,113 @@ function FragmentRow({ receipt: r, open, selected, onToggleSelect, onToggleOpen,
             aria-label={`Select ${r.receiptId}`}
           />
         </td>
-        <td className="muted row-click" onClick={onToggleOpen}>
-          <span className="row-caret" aria-hidden="true">{open ? "▾" : "▸"}</span>
-          {formatDateTime(r.occurredAt)}
-        </td>
-        <td className="row-click" onClick={onToggleOpen}>
-          {r.accessorType === "aggregator" ? (
+        {cell(formatDateTime(r.occurredAt), "muted")}
+        {cell(
+          r.accessorType === "aggregator" ? (
             <span className="muted">Aggregator</span>
           ) : (
             <span className="by-agent">{r.accessorLabel}</span>
-          )}
-        </td>
-        <td className="row-click" onClick={onToggleOpen}>{r.purpose}</td>
-        <td className="row-click" onClick={onToggleOpen}>{r.clusterLabel}</td>
-        <td className="muted row-click" onClick={onToggleOpen}>{r.accountId || "—"}</td>
-        <td className="row-click" onClick={onToggleOpen}>
-          {r.allowed ? (
+          ),
+        )}
+        {cell(r.purpose)}
+        {cell(r.clusterLabel)}
+        {cell(r.accountId || "—", "muted")}
+        {cell(
+          r.allowed ? (
             <span className="badge status-granted">Allowed</span>
           ) : (
             <span className="badge status-revoked">Denied</span>
-          )}
-        </td>
-        <td className="muted row-click" onClick={onToggleOpen}>
-          {r.allowed ? `${r.recordCount} record${r.recordCount === 1 ? "" : "s"}` : "—"}
-          {r.withheld.length > 0 && <span className="withheld"> · withheld {r.withheld.join(", ")}</span>}
-        </td>
-        <td className="muted row-click" onClick={onToggleOpen}>
-          <code>{r.authorizingConsentId || "—"}</code>
+          ),
+        )}
+        {cell(r.allowed ? `${r.recordCount}` : "—", "muted")}
+        {cell(r.withheld.length ? r.withheld.join(", ") : "—", "muted withheld-cell")}
+        {cell(<code>{r.authorizingConsentId || "—"}</code>, "muted")}
+        <td className="col-caret row-click" onClick={onToggleOpen}>
+          <span className="row-caret" aria-hidden="true">
+            {open ? "▾" : "▸"}
+          </span>
         </td>
       </tr>
       {open && (
         <tr className="detail-row">
-          <td colSpan={9}>
-            <div className="receipt-detail">
-              <p className="receipt-why">{r.why}</p>
-              <dl className="authority-meta">
-                <div>
-                  <dt>Fields in this cluster</dt>
-                  <dd>{r.fields.join(", ") || "—"}</dd>
-                </div>
-                <div>
-                  <dt>Authorizing grant</dt>
-                  <dd>
-                    <code>{r.authorizingConsentId || "—"}</code>
-                  </dd>
-                </div>
-                <div>
-                  <dt>Disclosed</dt>
-                  <dd>
-                    {r.allowed ? `${r.recordCount} record${r.recordCount === 1 ? "" : "s"}` : "nothing"}
-                  </dd>
-                </div>
-                {r.withheld.length > 0 && (
-                  <div>
-                    <dt>Withheld</dt>
-                    <dd>{r.withheld.join(", ")}</dd>
+          <td colSpan={11}>
+            <div className="receipt-full">
+              <div className="rf-head">
+                <span>
+                  📄 Receipt <code>{r.receiptId}</code>
+                </span>
+                <span className="muted">Occurred at {r.occurredAt}</span>
+              </div>
+              <div className="rf-grid">
+                <RfCol
+                  items={[
+                    ["Accessor", r.accessor],
+                    ["Accessor label", r.accessorLabel],
+                    ["Accessor type", r.accessorType],
+                    ["Purpose", r.purpose],
+                  ]}
+                />
+                <RfCol
+                  items={[
+                    ["Cluster", r.cluster],
+                    ["Cluster label", r.clusterLabel],
+                    ["Fields", r.fields.join(", ") || "—"],
+                  ]}
+                />
+                <RfCol
+                  items={[
+                    ["Account ID", r.accountId || "—"],
+                    ["Authorizing grant", r.authorizingConsentId || "—"],
+                    ["Allowed", String(r.allowed)],
+                    ["Record count", String(r.recordCount)],
+                  ]}
+                />
+                <RfCol
+                  items={[
+                    ["Withheld", r.withheld.length ? r.withheld.join(", ") : "none"],
+                    ["Why", r.why],
+                  ]}
+                />
+              </div>
+              <div className="js-menu rf-download">
+                <button type="button" className="btn-revoke" onClick={() => onMenu(!menuOpen)}>
+                  ⬇ Download ▾
+                </button>
+                {menuOpen && (
+                  <div className="export-menu" role="menu">
+                    {EXPORT_OPTS.map(([label, kind]) => (
+                      <button
+                        key={kind}
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          runExport(kind, [r], enhanced, meta);
+                          onMenu(false);
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
                 )}
-              </dl>
-              <div className="detail-downloads">
-                <button
-                  type="button"
-                  className="btn-revoke"
-                  onClick={() => download(`${r.receiptId}.json`, toJSON([r], enhanced), "application/json")}
-                >
-                  Download JSON
-                </button>
-                <button
-                  type="button"
-                  className="btn-revoke"
-                  onClick={() => download(`${r.receiptId}.md`, toMarkdown([r], enhanced), "text/markdown")}
-                >
-                  Download Markdown
-                </button>
               </div>
             </div>
           </td>
         </tr>
       )}
     </>
+  );
+}
+
+function RfCol({ items }) {
+  return (
+    <dl className="rf-col">
+      {items.map(([k, v]) => (
+        <div key={k}>
+          <dt>{k}</dt>
+          <dd>{v}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }

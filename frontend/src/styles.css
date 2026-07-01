@@ -2120,6 +2120,223 @@ tr.row-open > td {
   margin-top: 0;
 }
 
+/* Compact log-integrity card + richer Activity Log (slice 5.2) */
+.cc-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+.log-integrity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 10px 14px;
+}
+.log-integrity.broken {
+  border-color: var(--ink);
+}
+.li-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.li-icon {
+  color: var(--accent);
+  font-size: 16px;
+}
+.li-title {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.li-value {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.li-value.ok {
+  color: var(--accent);
+}
+.li-value.bad {
+  color: var(--ink);
+}
+.li-actions {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.li-actions .btn-revoke {
+  margin-top: 0;
+}
+.li-more {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  color: var(--muted);
+  border-radius: var(--radius-sm);
+  width: 30px;
+  height: 34px;
+  padding: 0;
+}
+.li-more:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.li-menu {
+  min-width: 190px;
+}
+.date-wrap,
+.filter-wrap,
+.export-wrap {
+  position: relative;
+}
+.filter-btn {
+  font-size: 13px;
+  padding: 7px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.filter-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.export-btn {
+  font-size: 13px;
+  padding: 8px 14px;
+  white-space: nowrap;
+}
+.date-menu {
+  min-width: 210px;
+}
+.menu-heading {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  padding: 6px 10px 2px;
+}
+.export-menu button.active {
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+.filter-panel {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 10px 30px rgba(16, 24, 40, 0.14);
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
+  gap: 10px 14px;
+  min-width: 340px;
+}
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.filter-field select {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+}
+.filter-clear {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+.col-caret {
+  width: 28px;
+  text-align: center;
+}
+.withheld-cell {
+  max-width: 130px;
+}
+.receipt-full {
+  padding: 4px 2px 6px;
+}
+.rf-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+.rf-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 12px;
+}
+.rf-col {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rf-col > div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.rf-col dt {
+  font-size: 11px;
+  color: var(--muted);
+}
+.rf-col dd {
+  margin: 0;
+  font-size: 12.5px;
+  font-family: var(--font-mono);
+  word-break: break-word;
+}
+.rf-download {
+  display: inline-block;
+}
+.rf-download .btn-revoke {
+  margin-top: 0;
+}
+/* Inline (not absolute) so it isn't clipped by the table's horizontal scroll. */
+.rf-download .export-menu {
+  position: static;
+  box-shadow: none;
+  margin-top: 6px;
+  min-width: 0;
+}
+@media (max-width: 900px) {
+  .rf-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 560px) {
+  .rf-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Honour reduced-motion preferences. */
 @media (prefers-reduced-motion: reduce) {
   * {
