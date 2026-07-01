@@ -13,6 +13,8 @@ self-contained and any coding session (or reviewer) has the full picture.
   choices, one file per decision.
 - **screen-scraping.md** — "why screen-scraping is about to break": the argument
   for building FDX-first, with the old-way/new-way contrast.
+- **THREAT_MODEL.md** — trust boundaries, threats/mitigations, audit-log
+  integrity, and what real FDX accreditation would require.
 - **project-review.md** — a walkthrough script (problem, architecture, the consent
   layer, trade-offs, path to accreditation, Q&A).
 - **blog-post.md** — LinkedIn + blog drafts for sharing the project publicly.

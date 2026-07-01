@@ -241,7 +241,14 @@ The *why* behind the structure is recorded as **[ADRs](docs/adr/)**:
 | [0003](docs/adr/0003-consent-as-a-gate.md) | Consent as a gate every read passes |
 | [0004](docs/adr/0004-traceability-and-minimization.md) | Append-only audit + field-level minimization |
 | [0005](docs/adr/0005-agentic-delegation-as-consent.md) | Agent delegation as a consent to an agent identity |
-| [0006](docs/adr/0006-in-memory-stores-and-mocks.md) | In-memory stores + mock providers |
+| [0006](docs/adr/0006-in-memory-stores-and-mocks.md) | In-memory stores + mock providers (SQLite behind the seam) |
+
+## Security
+
+The trust boundaries, threats/mitigations, audit-log integrity guarantees, and
+the path to real FDX accreditation are written up in
+**[docs/THREAT_MODEL.md](docs/THREAT_MODEL.md)** — for a system whose product is
+auditable consent, that reasoning is part of the build.
 
 ---
 
