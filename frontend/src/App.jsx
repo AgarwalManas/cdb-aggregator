@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { getScopes } from "./api.js";
+import { getScopes, resetDemo } from "./api.js";
 import AgentPage from "./pages/AgentPage.jsx";
 import ConsentPage from "./pages/ConsentPage.jsx";
 import OverviewPage from "./pages/OverviewPage.jsx";
@@ -23,12 +23,23 @@ const TABS = {
 export default function App() {
   const [tab, setTab] = useState("overview");
   const [scopeCatalog, setScopeCatalog] = useState({});
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     getScopes()
       .then((list) => setScopeCatalog(Object.fromEntries(list.map((s) => [s.scope, s]))))
       .catch(() => setScopeCatalog({}));
   }, []);
+
+  async function handleReset() {
+    setResetting(true);
+    try {
+      await resetDemo();
+      window.location.reload(); // refetch every tab from the freshly-seeded world
+    } catch {
+      setResetting(false);
+    }
+  }
 
   return (
     <div className="page">
@@ -37,11 +48,21 @@ export default function App() {
           <h1>{TABS[tab].title}</h1>
           <p className="subtitle">{TABS[tab].subtitle}</p>
         </div>
-        <div className="who">
-          <span className="avatar">AL</span>
-          <div>
-            <strong>Ada Lovelace</strong>
-            <span className="muted">Household</span>
+        <div className="topbar-right">
+          <button
+            className="reset-demo"
+            onClick={handleReset}
+            disabled={resetting}
+            title="Restore the demo to its seeded state. Only affects your session."
+          >
+            {resetting ? "Resetting…" : "Reset demo"}
+          </button>
+          <div className="who">
+            <span className="avatar">AL</span>
+            <div>
+              <strong>Ada Lovelace</strong>
+              <span className="muted">Household</span>
+            </div>
           </div>
         </div>
       </header>

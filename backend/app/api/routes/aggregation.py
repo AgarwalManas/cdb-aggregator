@@ -10,17 +10,14 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 
 from app.api import aggregation
 from app.api.demo import AggregatorState
 from app.api.dto import AccountView, NetWorthView, TransactionView
+from app.api.session import get_state
 
 router = APIRouter(prefix="/api", tags=["aggregation"])
-
-
-def get_state(request: Request) -> AggregatorState:
-    return request.app.state.aggregator
 
 
 StateDep = Annotated[AggregatorState, Depends(get_state)]

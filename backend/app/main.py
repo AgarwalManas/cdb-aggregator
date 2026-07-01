@@ -14,13 +14,18 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app import __version__
-from app.api.demo import build_demo_state
 from app.api.routes import agent, aggregation, consent, health
+from app.api.session import (
+    COOKIE_MAX_AGE,
+    SESSION_COOKIE,
+    SessionStore,
+    new_session_id,
+)
 from app.core.config import get_settings
 
 
@@ -45,9 +50,31 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # In-memory demo world the consent dashboard reads and mutates. A real
-    # deployment builds this from a database + the connected sources instead.
-    app.state.aggregator = build_demo_state()
+    # Per-visitor demo worlds: each browser session gets its own isolated,
+    # mutable copy so one visitor's revoke never touches another's. A real
+    # deployment builds each world from a database + the connected sources.
+    app.state.sessions = SessionStore()
+
+    @app.middleware("http")
+    async def ensure_session(request: Request, call_next):
+        """Give every visitor a stable session id (cookie) for their own world."""
+        session_id = request.cookies.get(SESSION_COOKIE)
+        is_new = session_id is None
+        if is_new:
+            session_id = new_session_id()
+        request.state.session_id = session_id
+
+        response = await call_next(request)
+
+        if is_new:
+            response.set_cookie(
+                SESSION_COOKIE,
+                session_id,
+                max_age=COOKIE_MAX_AGE,
+                httponly=True,
+                samesite="lax",
+            )
+        return response
 
     app.include_router(health.router)
     app.include_router(consent.router)  # Item 9: consent dashboard API

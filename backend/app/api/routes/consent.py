@@ -2,8 +2,8 @@
 
 The endpoints the React client calls: list the available scopes, list the
 customer's connections, connect a new source (grant), one-tap revoke, and read
-the traceability audit log. State lives on ``app.state.aggregator`` (seeded by
-:func:`app.api.demo.build_demo_state`).
+the traceability audit log. State is the current visitor's demo world, resolved
+per session by :func:`app.api.session.get_state`.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from app.api.demo import SOURCES, AggregatorState, Connection
 from app.api.dto import (
@@ -21,16 +21,21 @@ from app.api.dto import (
     ScopeInfo,
     scope_catalog,
 )
+from app.api.session import SessionStore, get_state
 from app.models import Consent
 
 router = APIRouter(prefix="/api", tags=["consent"])
 
 
-def get_state(request: Request) -> AggregatorState:
-    return request.app.state.aggregator
-
-
 StateDep = Annotated[AggregatorState, Depends(get_state)]
+
+
+@router.post("/demo/reset", status_code=204, summary="Reset this visitor's demo data")
+def reset_demo(request: Request) -> Response:
+    """Rebuild the current session's demo world, undoing any revokes/grants/runs."""
+    sessions: SessionStore = request.app.state.sessions
+    sessions.reset(request.state.session_id)
+    return Response(status_code=204)
 
 
 def _view(state: AggregatorState, connection: Connection, consent: Consent) -> ConnectionView:

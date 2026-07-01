@@ -12,7 +12,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.agent import (
     AGENT_DESCRIPTION,
@@ -28,15 +28,12 @@ from app.api.dto import (
     NotCountedView,
     SuggestionView,
 )
+from app.api.session import get_state
 from app.models import Consent
 
 router = APIRouter(prefix="/api/agent", tags=["agent"])
 
 DELEGATION_DAYS = 30
-
-
-def get_state(request: Request) -> AggregatorState:
-    return request.app.state.aggregator
 
 
 StateDep = Annotated[AggregatorState, Depends(get_state)]

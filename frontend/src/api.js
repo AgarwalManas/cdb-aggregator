@@ -4,7 +4,8 @@
 const BASE = "/api";
 
 async function request(path, options) {
-  const res = await fetch(BASE + path, options);
+  // Same-origin so the per-session cookie (which world is "yours") rides along.
+  const res = await fetch(BASE + path, { credentials: "same-origin", ...options });
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
     throw new Error(`${res.status} ${res.statusText}: ${detail}`);
@@ -37,3 +38,6 @@ export const grantConnection = (body) =>
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+
+// Reset this visitor's demo world back to its seeded state (Item: deploy demo).
+export const resetDemo = () => request("/demo/reset", { method: "POST" });
