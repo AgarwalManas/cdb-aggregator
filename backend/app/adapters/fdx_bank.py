@@ -22,6 +22,7 @@ from app.models import (
     PostalAddress,
     Transaction,
 )
+from app.security.pkce import CODE_CHALLENGE_METHOD, generate_verifier, s256_challenge
 
 from .base import (
     SourceAdapter,
@@ -139,18 +140,47 @@ class FdxHttpClient:
     ) -> FdxHttpClient:
         return cls(httpx.Client(base_url=base_url, timeout=timeout), client_id, client_secret)
 
+    def _fetch_token(self) -> str:
+        """Run PAR → authorize → token with PKCE and return the access token."""
+        verifier = generate_verifier()
+        creds = {"client_id": self._client_id, "client_secret": self._client_secret}
+
+        # 1. Push the authorization request (with the S256 challenge).
+        par = self._http.post(
+            "/oauth2/par",
+            data={
+                **creds,
+                "code_challenge": s256_challenge(verifier),
+                "code_challenge_method": CODE_CHALLENGE_METHOD,
+            },
+        )
+        par.raise_for_status()
+        request_uri = par.json()["request_uri"]
+
+        # 2. Exchange the request_uri for a single-use authorization code.
+        authorized = self._http.get(
+            "/oauth2/authorize",
+            params={"client_id": self._client_id, "request_uri": request_uri},
+        )
+        authorized.raise_for_status()
+        code = authorized.json()["code"]
+
+        # 3. Redeem the code, proving PKCE with the verifier.
+        token = self._http.post(
+            "/oauth2/token",
+            data={
+                **creds,
+                "grant_type": "authorization_code",
+                "code": code,
+                "code_verifier": verifier,
+            },
+        )
+        token.raise_for_status()
+        return token.json()["access_token"]
+
     def _auth_headers(self) -> dict[str, str]:
         if self._token is None:
-            resp = self._http.post(
-                "/oauth2/token",
-                data={
-                    "grant_type": "client_credentials",
-                    "client_id": self._client_id,
-                    "client_secret": self._client_secret,
-                },
-            )
-            resp.raise_for_status()
-            self._token = resp.json()["access_token"]
+            self._token = self._fetch_token()
         return {"Authorization": f"Bearer {self._token}"}
 
     def _get(self, path: str) -> Any:

@@ -19,16 +19,18 @@ Interactive docs at <http://127.0.0.1:9001/docs>.
 
 ## OAuth2
 
-A mock **client-credentials** grant (machine-to-machine: the aggregator
-authenticating to the bank). A production FDX integration would use the
-authorization-code grant with PKCE under a FAPI profile and a user-consent step;
-that user-facing consent is modeled separately in this project's consent layer
-(Items 7–8).
+Two grants are supported:
+
+- **`authorization_code` + PKCE, initiated via PAR** (item-23) — the FAPI-shaped
+  flow the adapter uses. See *FAPI coverage* below.
+- **`client_credentials`** — a machine-to-machine convenience, kept so the token
+  endpoint is trivially callable with `curl`.
 
 | | |
 |---|---|
+| PAR endpoint | `POST /oauth2/par` |
+| Authorization endpoint | `GET /oauth2/authorize` |
 | Token endpoint | `POST /oauth2/token` |
-| Grant type | `client_credentials` |
 | Client ID | `cdb-aggregator` |
 | Client secret | `local-mock-secret` *(mock value, not a real credential)* |
 | Scopes | `accounts:read`, `transactions:read`, `customer:read` |
@@ -36,10 +38,42 @@ that user-facing consent is modeled separately in this project's consent layer
 Requesting no `scope` grants all supported scopes. Tokens expire in 1 hour.
 
 ```bash
+# Quick machine-to-machine token:
 curl -s -X POST http://127.0.0.1:9001/oauth2/token \
   -d grant_type=client_credentials \
   -d client_id=cdb-aggregator -d client_secret=local-mock-secret \
   -d scope="accounts:read transactions:read"
+```
+
+### FAPI coverage
+
+FDX mandates the **FAPI** security profile. This mock models the security-critical
+parts of that flow so the adapter exercises them rather than a toy token call:
+
+**Covered**
+
+- **PKCE (RFC 7636), `S256` only** — the client sends a `code_challenge` at PAR
+  time and proves the matching `code_verifier` when redeeming the code; a mismatch
+  is rejected as `invalid_grant`. `plain` is refused.
+- **Pushed Authorization Requests (RFC 9126)** — the request is pushed to
+  `/oauth2/par`, which returns a short-lived, single-use `request_uri`; the
+  authorization endpoint accepts *only* a pushed `request_uri`.
+- **Single-use, short-lived artifacts** — `request_uri` (90 s) and authorization
+  code (60 s) are each consumed on first use.
+- **Confidential-client authentication** on every token/PAR call.
+
+**Out of scope (documented, not implemented)**
+
+- **Sender-constrained tokens** (mTLS or DPoP) — FAPI requires binding the token
+  to the client's key. The mock issues bearer tokens; this is the main remaining
+  FAPI gap and is noted in the threat model.
+- **Signed request objects / JARM**, browser redirect + real user authentication
+  (the mock's `/authorize` returns the code as JSON since there is no user agent),
+  and a discovery document.
+
+```bash
+# FAPI flow (PAR -> authorize -> token) is what the adapter drives; see
+# app/adapters/fdx_bank.py::FdxHttpClient._fetch_token.
 ```
 
 ## Resource endpoints

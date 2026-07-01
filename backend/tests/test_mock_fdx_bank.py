@@ -17,6 +17,7 @@ from fastapi.testclient import TestClient
 from app.models import Account, Balance
 from app.providers.mock_fdx_bank.app import create_app
 from app.providers.mock_fdx_bank.auth import CLIENT_ID, CLIENT_SECRET
+from app.security.pkce import CODE_CHALLENGE_METHOD, generate_verifier, s256_challenge
 
 API = "/fdx/v6"
 
@@ -215,3 +216,144 @@ def test_fdx_account_maps_cleanly_into_canonical_model(client: TestClient) -> No
     )
     assert canonical.account_id == "acc-chq-001"
     assert canonical.balances[0].current == Decimal("4210.55")
+
+
+# --- FAPI flow: PAR + authorization-code + PKCE (item-23) --------------------
+
+
+def _par(client: TestClient, verifier: str, scope: str | None = None):
+    form = {
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "code_challenge": s256_challenge(verifier),
+        "code_challenge_method": CODE_CHALLENGE_METHOD,
+    }
+    if scope is not None:
+        form["scope"] = scope
+    return client.post("/oauth2/par", data=form)
+
+
+def _authorize(client: TestClient, request_uri: str):
+    return client.get(
+        "/oauth2/authorize", params={"client_id": CLIENT_ID, "request_uri": request_uri}
+    )
+
+
+def _redeem(client: TestClient, code: str, code_verifier: str):
+    return client.post(
+        "/oauth2/token",
+        data={
+            "grant_type": "authorization_code",
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
+            "code": code,
+            "code_verifier": code_verifier,
+        },
+    )
+
+
+def test_fapi_flow_issues_a_usable_token(client: TestClient) -> None:
+    verifier = generate_verifier()
+    request_uri = _par(client, verifier).json()["request_uri"]
+    code = _authorize(client, request_uri).json()["code"]
+    body = _redeem(client, code, verifier).json()
+
+    assert body["token_type"] == "Bearer"
+    assert body["access_token"]
+    # The issued token actually works on a resource endpoint.
+    assert client.get(f"{API}/accounts", headers=_auth(body["access_token"])).status_code == 200
+
+
+def test_par_happy_path_returns_request_uri(client: TestClient) -> None:
+    resp = _par(client, generate_verifier())
+    assert resp.status_code == 201
+    body = resp.json()
+    assert body["request_uri"].startswith("urn:ietf:params:oauth:request_uri:")
+    assert body["expires_in"] > 0
+
+
+def test_par_requires_s256(client: TestClient) -> None:
+    resp = client.post(
+        "/oauth2/par",
+        data={
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
+            "code_challenge": "abc",
+            "code_challenge_method": "plain",
+        },
+    )
+    assert resp.status_code == 400
+    assert resp.json()["error"] == "invalid_request"
+
+
+def test_par_rejects_bad_client(client: TestClient) -> None:
+    resp = client.post(
+        "/oauth2/par",
+        data={
+            "client_id": CLIENT_ID,
+            "client_secret": "wrong",
+            "code_challenge": "abc",
+            "code_challenge_method": CODE_CHALLENGE_METHOD,
+        },
+    )
+    assert resp.status_code == 401
+    assert resp.json()["error"] == "invalid_client"
+
+
+def test_par_rejects_unknown_scope(client: TestClient) -> None:
+    resp = _par(client, generate_verifier(), scope="accounts:read wire:transfer")
+    assert resp.status_code == 400
+    assert resp.json()["error"] == "invalid_scope"
+
+
+def test_authorize_rejects_bad_client(client: TestClient) -> None:
+    resp = client.get("/oauth2/authorize", params={"client_id": "nope", "request_uri": "x"})
+    assert resp.status_code == 401
+    assert resp.json()["error"] == "invalid_client"
+
+
+def test_authorize_rejects_unknown_request_uri(client: TestClient) -> None:
+    resp = _authorize(client, "urn:ietf:params:oauth:request_uri:bogus")
+    assert resp.status_code == 400
+    assert resp.json()["error"] == "invalid_request"
+
+
+def test_request_uri_is_single_use(client: TestClient) -> None:
+    request_uri = _par(client, generate_verifier()).json()["request_uri"]
+    assert _authorize(client, request_uri).status_code == 200
+    assert _authorize(client, request_uri).status_code == 400  # consumed
+
+
+def test_token_authorization_code_requires_code_and_verifier(client: TestClient) -> None:
+    resp = client.post(
+        "/oauth2/token",
+        data={
+            "grant_type": "authorization_code",
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
+        },
+    )
+    assert resp.status_code == 400
+    assert resp.json()["error"] == "invalid_request"
+
+
+def test_token_rejects_unknown_code(client: TestClient) -> None:
+    resp = _redeem(client, "not-a-real-code", "whatever")
+    assert resp.status_code == 400
+    assert resp.json()["error"] == "invalid_grant"
+
+
+def test_token_rejects_pkce_mismatch(client: TestClient) -> None:
+    request_uri = _par(client, generate_verifier()).json()["request_uri"]
+    code = _authorize(client, request_uri).json()["code"]
+    resp = _redeem(client, code, generate_verifier())  # wrong verifier
+    assert resp.status_code == 400
+    assert resp.json()["error"] == "invalid_grant"
+
+
+def test_authorization_code_is_single_use(client: TestClient) -> None:
+    verifier = generate_verifier()
+    request_uri = _par(client, verifier).json()["request_uri"]
+    code = _authorize(client, request_uri).json()["code"]
+    assert _redeem(client, code, verifier).status_code == 200
+    assert _redeem(client, code, verifier).status_code == 400  # code already spent

@@ -18,11 +18,14 @@ from __future__ import annotations
 from fastapi import Depends, FastAPI, Form, Request
 from fastapi.responses import JSONResponse
 
+from app.security.pkce import CODE_CHALLENGE_METHOD
+
 from . import data
 from .auth import (
     CLIENT_ID,
     CLIENT_SECRET,
     DEFAULT_TOKEN_TTL_SECONDS,
+    PAR_TTL_SECONDS,
     SUPPORTED_SCOPES,
     TokenStore,
     require_scopes,
@@ -54,40 +57,16 @@ def create_app() -> FastAPI:
         return {
             "service": "Mock FDX Bank",
             "fdxVersion": data.FDX_API_VERSION,
+            "pushedAuthorizationRequestEndpoint": "/oauth2/par",
+            "authorizationEndpoint": "/oauth2/authorize",
             "tokenEndpoint": "/oauth2/token",
             "resourceBasePath": _API,
             "docs": "/docs",
         }
 
-    # --- OAuth2 token endpoint ------------------------------------------------
+    # --- OAuth2: PAR + authorization-code (PKCE) + token ----------------------
 
-    @app.post("/oauth2/token", tags=["oauth2"], summary="Issue an access token")
-    def issue_token(
-        request: Request,
-        grant_type: str = Form(...),
-        client_id: str = Form(...),
-        client_secret: str = Form(...),
-        scope: str | None = Form(default=None),
-    ) -> JSONResponse:
-        """Client-credentials grant. Returns a bearer token scoped as requested."""
-
-        if grant_type != "client_credentials":
-            return _oauth_error(
-                "unsupported_grant_type",
-                "only client_credentials is supported by this mock",
-            )
-        if client_id != CLIENT_ID or client_secret != CLIENT_SECRET:
-            return _oauth_error("invalid_client", "unknown client credentials", 401)
-
-        # No scope requested -> grant everything this provider supports.
-        requested = frozenset(scope.split()) if scope else SUPPORTED_SCOPES
-        unknown = requested - SUPPORTED_SCOPES
-        if unknown:
-            return _oauth_error(
-                "invalid_scope", f"unsupported scope(s): {', '.join(sorted(unknown))}"
-            )
-
-        token = request.app.state.token_store.issue(requested)
+    def _token_response(token: object) -> JSONResponse:
         return JSONResponse(
             {
                 "access_token": token.value,
@@ -96,6 +75,92 @@ def create_app() -> FastAPI:
                 "scope": " ".join(sorted(token.scopes)),
             }
         )
+
+    def _resolve_scopes(scope: str | None) -> frozenset[str] | JSONResponse:
+        """No scope requested -> everything supported; otherwise validate the set."""
+        requested = frozenset(scope.split()) if scope else SUPPORTED_SCOPES
+        unknown = requested - SUPPORTED_SCOPES
+        if unknown:
+            return _oauth_error(
+                "invalid_scope", f"unsupported scope(s): {', '.join(sorted(unknown))}"
+            )
+        return requested
+
+    @app.post("/oauth2/par", tags=["oauth2"], summary="Pushed authorization request (RFC 9126)")
+    def pushed_authorization_request(
+        request: Request,
+        client_id: str = Form(...),
+        client_secret: str = Form(...),
+        code_challenge: str = Form(...),
+        code_challenge_method: str = Form(...),
+        scope: str | None = Form(default=None),
+    ) -> JSONResponse:
+        """Push the authorization request up front; return an opaque ``request_uri``."""
+        if client_id != CLIENT_ID or client_secret != CLIENT_SECRET:
+            return _oauth_error("invalid_client", "unknown client credentials", 401)
+        if code_challenge_method != CODE_CHALLENGE_METHOD:
+            return _oauth_error(
+                "invalid_request", f"code_challenge_method must be {CODE_CHALLENGE_METHOD}"
+            )
+        scopes = _resolve_scopes(scope)
+        if isinstance(scopes, JSONResponse):
+            return scopes
+        request_uri = request.app.state.token_store.push_request(scopes, code_challenge)
+        return JSONResponse(
+            status_code=201, content={"request_uri": request_uri, "expires_in": PAR_TTL_SECONDS}
+        )
+
+    @app.get("/oauth2/authorize", tags=["oauth2"], summary="Authorize a pushed request")
+    def authorize(request: Request, client_id: str, request_uri: str) -> JSONResponse:
+        """Exchange a pushed ``request_uri`` for a single-use authorization code.
+
+        A browser flow would 302 to the redirect URI with ``?code=…``; the mock
+        returns the code as JSON since there is no user agent.
+        """
+        if client_id != CLIENT_ID:
+            return _oauth_error("invalid_client", "unknown client", 401)
+        pushed = request.app.state.token_store.consume_request(request_uri)
+        if pushed is None:
+            return _oauth_error("invalid_request", "unknown or expired request_uri")
+        code = request.app.state.token_store.issue_code(pushed.scopes, pushed.code_challenge)
+        return JSONResponse({"code": code})
+
+    @app.post("/oauth2/token", tags=["oauth2"], summary="Issue an access token")
+    def issue_token(
+        request: Request,
+        grant_type: str = Form(...),
+        client_id: str = Form(...),
+        client_secret: str = Form(...),
+        scope: str | None = Form(default=None),
+        code: str | None = Form(default=None),
+        code_verifier: str | None = Form(default=None),
+    ) -> JSONResponse:
+        """``client_credentials`` or ``authorization_code`` (with PKCE) grant."""
+        if grant_type not in ("client_credentials", "authorization_code"):
+            return _oauth_error(
+                "unsupported_grant_type",
+                "only client_credentials and authorization_code are supported by this mock",
+            )
+        if client_id != CLIENT_ID or client_secret != CLIENT_SECRET:
+            return _oauth_error("invalid_client", "unknown client credentials", 401)
+
+        store = request.app.state.token_store
+        if grant_type == "authorization_code":
+            if not code or not code_verifier:
+                return _oauth_error(
+                    "invalid_request", "authorization_code grant requires code and code_verifier"
+                )
+            token = store.redeem_code(code, code_verifier)
+            if token is None:
+                return _oauth_error(
+                    "invalid_grant", "code is invalid/expired or PKCE verification failed"
+                )
+            return _token_response(token)
+
+        scopes = _resolve_scopes(scope)
+        if isinstance(scopes, JSONResponse):
+            return scopes
+        return _token_response(store.issue(scopes))
 
     # --- FDX resource endpoints ----------------------------------------------
 
