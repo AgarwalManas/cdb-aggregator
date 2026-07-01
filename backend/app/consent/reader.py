@@ -1,9 +1,16 @@
-"""The consent-enforcing reader — where policy meets data.
+"""The consent-enforcing reader — where policy, traceability, and control meet.
 
-Wraps any Item 5 :class:`~app.adapters.base.SourceAdapter` and puts the consent
-gate in front of every read. Nothing reaches a caller without first clearing an
-active, in-scope grant, so this is the single choke point later HTTP endpoints
-(Items 9-10) depend on rather than touching adapters directly.
+Wraps any Item 5 :class:`~app.adapters.base.SourceAdapter` and makes every read:
+
+1. **pass the consent gate** (Item 7) — active, in-scope, account-covering grant,
+2. **get logged** to the append-only audit log (Item 8, Traceability) — allowed
+   or denied, tied to the grant it relied on,
+3. **come back minimized** (Item 8, Control) — only the fields the granted scopes
+   permit (contact withheld without ``CUSTOMER_CONTACT``; balances withheld
+   without ``BALANCES``).
+
+This is the single choke point later HTTP endpoints (Items 9-10) depend on rather
+than touching adapters directly.
 
 Each read maps to the scope it requires:
 
@@ -16,15 +23,11 @@ balances (per account)  ``BALANCES``
 transactions            ``TRANSACTIONS``
 holdings                ``INVESTMENT_HOLDINGS``
 ======================  ===========================
-
-Account-scoped reads (balances, transactions, holdings) also require the grant
-to cover that specific account. Field-level minimization *within* a granted
-scope is Item 8's job; this item gates access at the read/cluster level.
 """
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from app.adapters.base import SourceAdapter
 from app.models import (
@@ -36,52 +39,128 @@ from app.models import (
     Transaction,
 )
 
-from .enforcement import ConsentGate
+from .audit import AuditEvent, AuditLog
+from .enforcement import ConsentDecision, ConsentDenied, ConsentGate
+from .minimize import minimize_account, minimize_customer
 
 
 class ConsentEnforcingReader:
     """Reads from a source only for what an active, in-scope consent permits."""
 
-    def __init__(self, adapter: SourceAdapter, gate: ConsentGate) -> None:
+    def __init__(
+        self, adapter: SourceAdapter, gate: ConsentGate, audit: AuditLog | None = None
+    ) -> None:
         self._adapter = adapter
         self._gate = gate
+        self._audit = audit
+
+    # --- public reads --------------------------------------------------------
 
     def read_customer(
         self, customer_id: str, recipient: str, *, at: datetime | None = None
     ) -> Customer:
-        self._gate.authorize(customer_id, recipient, ConsentScope.CUSTOMER_IDENTITY, at=at)
-        return self._adapter.get_customer()
+        decision = self._authorize(
+            "read_customer", customer_id, recipient, ConsentScope.CUSTOMER_IDENTITY, None, at
+        )
+        customer, withheld = minimize_customer(
+            self._adapter.get_customer(), decision.consent.scopes
+        )
+        self._log("read_customer", customer_id, recipient, decision, at, 1, withheld)
+        return customer
 
     def read_accounts(
         self, customer_id: str, recipient: str, *, at: datetime | None = None
     ) -> list[Account]:
-        self._gate.authorize(customer_id, recipient, ConsentScope.ACCOUNT_DETAILS, at=at)
-        return self._adapter.get_accounts()
+        decision = self._authorize(
+            "read_accounts", customer_id, recipient, ConsentScope.ACCOUNT_DETAILS, None, at
+        )
+        scopes = decision.consent.scopes
+        minimized = [minimize_account(a, scopes) for a in self._adapter.get_accounts()]
+        accounts = [a for a, _ in minimized]
+        withheld = minimized[0][1] if minimized else ()
+        self._log("read_accounts", customer_id, recipient, decision, at, len(accounts), withheld)
+        return accounts
 
     def read_balances(
         self, customer_id: str, recipient: str, account_id: str, *, at: datetime | None = None
     ) -> list[Balance]:
-        self._gate.authorize(
-            customer_id, recipient, ConsentScope.BALANCES, account_id=account_id, at=at
+        decision = self._authorize(
+            "read_balances", customer_id, recipient, ConsentScope.BALANCES, account_id, at
         )
-        account = self._find_account(account_id)
-        return account.balances
+        balances = self._find_account(account_id).balances
+        self._log("read_balances", customer_id, recipient, decision, at, len(balances), ())
+        return balances
 
     def read_transactions(
         self, customer_id: str, recipient: str, account_id: str, *, at: datetime | None = None
     ) -> list[Transaction]:
-        self._gate.authorize(
-            customer_id, recipient, ConsentScope.TRANSACTIONS, account_id=account_id, at=at
+        decision = self._authorize(
+            "read_transactions", customer_id, recipient, ConsentScope.TRANSACTIONS, account_id, at
         )
-        return self._adapter.get_transactions(account_id)
+        txns = self._adapter.get_transactions(account_id)
+        self._log("read_transactions", customer_id, recipient, decision, at, len(txns), ())
+        return txns
 
     def read_holdings(
         self, customer_id: str, recipient: str, account_id: str, *, at: datetime | None = None
     ) -> list[InvestmentHolding]:
-        self._gate.authorize(
-            customer_id, recipient, ConsentScope.INVESTMENT_HOLDINGS, account_id=account_id, at=at
+        decision = self._authorize(
+            "read_holdings",
+            customer_id,
+            recipient,
+            ConsentScope.INVESTMENT_HOLDINGS,
+            account_id,
+            at,
         )
-        return self._adapter.get_holdings(account_id)
+        holdings = self._adapter.get_holdings(account_id)
+        self._log("read_holdings", customer_id, recipient, decision, at, len(holdings), ())
+        return holdings
+
+    # --- internals -----------------------------------------------------------
+
+    def _authorize(
+        self,
+        action: str,
+        customer_id: str,
+        recipient: str,
+        scope: ConsentScope,
+        account_id: str | None,
+        at: datetime | None,
+    ) -> ConsentDecision:
+        """Gate the read; log + raise on denial, return the decision on allow."""
+        decision = self._gate.check(customer_id, recipient, scope, account_id=account_id, at=at)
+        if not decision.allowed or decision.consent is None:
+            self._log(action, customer_id, recipient, decision, at, 0, ())
+            raise ConsentDenied(decision)
+        return decision
+
+    def _log(
+        self,
+        action: str,
+        customer_id: str,
+        recipient: str,
+        decision: ConsentDecision,
+        at: datetime | None,
+        record_count: int,
+        withheld: tuple[str, ...],
+    ) -> None:
+        if self._audit is None:
+            return
+        self._audit.record(
+            AuditEvent(
+                occurred_at=at or datetime.now(UTC),
+                action=action,
+                customer_id=customer_id,
+                recipient=recipient,
+                scope=decision.scope,
+                allowed=decision.allowed,
+                account_id=decision.account_id,
+                reason=decision.reason,
+                consent_id=decision.consent.consent_id if decision.consent else None,
+                record_count=record_count,
+                withheld=withheld,
+            )
+        )
 
     def _find_account(self, account_id: str) -> Account:
         for account in self._adapter.get_accounts():

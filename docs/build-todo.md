@@ -70,7 +70,7 @@ Frontend is **React** either way (their frontend is React/React Native).
 **Kickoff prompt:**
 > Wealthsimple project, **Item 7 — consent model + enforcement**. Pull the to-do list, canonical model, and normalizer from this project's history. Build the consent lifecycle (scopes, expiry, grant/revoke) and middleware that gates every read on an active in-scope consent, with tests.
 
-### [ ] Item 8 — Traceability audit log + data minimization
+### [x] Item 8 — Traceability audit log + data minimization
 **Produces:** an **append-only audit log** recording every data access tied to its consent grant, plus **data-minimization** enforcement (a read returns only the fields the granted scope permits). Maps to FDX's Traceability + Control principles.
 **Depends on:** Item 7.
 **Kickoff prompt:**
