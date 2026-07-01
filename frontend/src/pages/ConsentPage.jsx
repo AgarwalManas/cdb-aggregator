@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { getAudit, getConnections, getSources, grantConnection, revokeConnection } from "../api.js";
+import {
+  getAudit,
+  getAuditVerify,
+  getConnections,
+  getSources,
+  grantConnection,
+  revokeConnection,
+} from "../api.js";
 import AuditTable from "../components/AuditTable.jsx";
 import ConnectForm from "../components/ConnectForm.jsx";
 import ConnectionCard from "../components/ConnectionCard.jsx";
@@ -10,14 +17,20 @@ import ConnectionCard from "../components/ConnectionCard.jsx";
 export default function ConsentPage({ scopeCatalog }) {
   const [connections, setConnections] = useState([]);
   const [audit, setAudit] = useState([]);
+  const [verification, setVerification] = useState(null);
   const [sources, setSources] = useState([]);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
   const refresh = useCallback(async () => {
-    const [conns, events] = await Promise.all([getConnections(), getAudit()]);
+    const [conns, events, verify] = await Promise.all([
+      getConnections(),
+      getAudit(),
+      getAuditVerify(),
+    ]);
     setConnections(conns);
     setAudit(events);
+    setVerification(verify);
   }, []);
 
   useEffect(() => {
@@ -80,7 +93,7 @@ export default function ConsentPage({ scopeCatalog }) {
           Every access to your data is recorded — allowed or denied — and tied to the consent that
           permitted it.
         </p>
-        <AuditTable events={audit} catalog={scopeCatalog} />
+        <AuditTable events={audit} catalog={scopeCatalog} verification={verification} />
       </section>
     </>
   );

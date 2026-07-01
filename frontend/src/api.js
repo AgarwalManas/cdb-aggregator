@@ -17,6 +17,7 @@ export const getScopes = () => request("/scopes");
 export const getSources = () => request("/sources");
 export const getConnections = () => request("/connections");
 export const getAudit = () => request("/audit");
+export const getAuditVerify = () => request("/audit/verify"); // hash-chain integrity (item-22)
 
 // Aggregation (Item 10)
 export const getAccounts = () => request("/accounts");
