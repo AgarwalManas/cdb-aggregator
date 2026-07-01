@@ -20,6 +20,14 @@ def client() -> TestClient:
     return TestClient(create_app())
 
 
+def test_comparison_endpoint(client: TestClient) -> None:
+    rows = client.get("/api/comparison").json()
+    assert len(rows) >= 5
+    assert "Authentication" in {r["dimension"] for r in rows}
+    # camelCase on the wire, and both sides populated for every dimension.
+    assert all(r["screenScraping"] and r["fdxOpenBanking"] for r in rows)
+
+
 def test_merged_accounts_span_sources(client: TestClient) -> None:
     accounts = client.get("/api/accounts").json()
     ids = {a["accountId"] for a in accounts}

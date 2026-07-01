@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { getScopes, resetDemo } from "./api.js";
 import ThemeToggle from "./components/ThemeToggle.jsx";
 import AgentPage from "./pages/AgentPage.jsx";
+import ComparePage from "./pages/ComparePage.jsx";
 import ConsentPage from "./pages/ConsentPage.jsx";
 import OverviewPage from "./pages/OverviewPage.jsx";
 
@@ -18,6 +19,10 @@ const TABS = {
   assistant: {
     title: "Assistant",
     subtitle: "Delegate a scoped, revocable task to an agent — it suggests, it never acts.",
+  },
+  compare: {
+    title: "Old way vs new way",
+    subtitle: "Why token-based FDX access beats credential-based screen-scraping.",
   },
 };
 
@@ -79,11 +84,15 @@ export default function App() {
         <button className={tab === "assistant" ? "active" : ""} onClick={() => setTab("assistant")}>
           Assistant
         </button>
+        <button className={tab === "compare" ? "active" : ""} onClick={() => setTab("compare")}>
+          Old vs New
+        </button>
       </nav>
 
       {tab === "overview" && <OverviewPage />}
       {tab === "consent" && <ConsentPage scopeCatalog={scopeCatalog} />}
       {tab === "assistant" && <AgentPage scopeCatalog={scopeCatalog} />}
+      {tab === "compare" && <ComparePage />}
 
       <footer className="foot">cdb-aggregator · FDX-aligned consent &amp; traceability demo</footer>
     </div>

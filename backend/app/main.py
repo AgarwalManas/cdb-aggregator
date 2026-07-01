@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app import __version__
-from app.api.routes import agent, aggregation, consent, health
+from app.api.routes import agent, aggregation, comparison, consent, health
 from app.api.session import (
     COOKIE_MAX_AGE,
     SESSION_COOKIE,
@@ -80,6 +80,7 @@ def create_app() -> FastAPI:
     app.include_router(consent.router)  # Item 9: consent dashboard API
     app.include_router(aggregation.router)  # Item 10: unified accounts / net worth
     app.include_router(agent.router)  # Item 11: agentic delegation
+    app.include_router(comparison.router)  # item-20: old-way vs new-way contrast
 
     dist = _frontend_dist(settings.frontend_dist)
     if dist is None:

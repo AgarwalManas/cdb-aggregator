@@ -873,6 +873,74 @@ button:disabled {
   color: var(--ink);
 }
 
+/* Old-way vs new-way contrast (item-20). A hairline grid: muted "old" column,
+   ink "new" column with the accent check — the argument for the right side. */
+.compare {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  margin-top: 12px;
+}
+.compare-row {
+  display: grid;
+  grid-template-columns: 170px 1fr 1fr;
+  gap: 1px;
+  background: var(--hairline);
+}
+.compare-row:not(:first-child) {
+  margin-top: 1px;
+}
+.compare-row > * {
+  background: var(--surface);
+  padding: 14px 16px;
+  font-size: 13.5px;
+}
+.compare-head > * {
+  background: var(--surface-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.compare-dim {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.compare-old {
+  color: var(--muted);
+}
+.compare-new {
+  color: var(--ink);
+}
+.mark {
+  display: inline-block;
+  width: 15px;
+  font-weight: 700;
+  margin-right: 6px;
+}
+.mark-old {
+  color: var(--muted);
+}
+.mark-new {
+  color: var(--accent);
+}
+@media (max-width: 720px) {
+  .compare-row {
+    grid-template-columns: 1fr;
+  }
+  .compare-head {
+    display: none;
+  }
+  .compare-dim {
+    background: var(--surface-2);
+  }
+}
+
 /* Responsive: stack the top bar on narrow screens (down to ~375px). */
 @media (max-width: 560px) {
   .page {

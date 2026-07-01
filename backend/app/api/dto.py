@@ -83,6 +83,14 @@ class ChainVerificationView(ApiModel):
     broken_at: int | None = None  # index of the first broken entry, if any
 
 
+class ComparisonRow(ApiModel):
+    """One dimension contrasting screen-scraping with FDX open banking (item-20)."""
+
+    dimension: str
+    screen_scraping: str
+    fdx_open_banking: str
+
+
 def scope_catalog() -> list[ScopeInfo]:
     return [
         ScopeInfo(scope=scope, label=label, description=desc)
