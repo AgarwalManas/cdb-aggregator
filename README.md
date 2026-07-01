@@ -9,10 +9,17 @@ scraper.
 
 It ingests data from three deliberately different mock sources, normalizes them
 into one FDX-shaped model, and gates **every read** on an active, in-scope,
-revocable consent — logging each access to an append-only trail and returning only
-the fields the customer actually shared. On top of that sits a unified net-worth
-dashboard and an agentic-delegation layer that hands a **scoped, revocable,
-fully-logged** task to an AI agent.
+revocable consent — logging each access to an append-only, hash-chained trail and
+returning only the fields the customer actually shared. On top of that sits a
+unified net-worth dashboard and an agentic-delegation layer that hands a
+**scoped, revocable, fully-logged** task to an AI agent.
+
+From there it pushes the consent thesis onto the screen — a real-time
+**agent authority console**, consumer-legible **access receipts**, a
+**user-verifiable** (recompute-it-in-your-browser) audit log, a **portable,
+consent-gated account alias**, and two clearly-labelled simulations of where open
+finance is heading (selective-disclosure proofs and a verifiable-credential
+wallet). See **[The consent frontier](#going-further--the-consent-frontier)**.
 
 ---
 
@@ -103,6 +110,38 @@ that all data reads pass through ([ADR 0003](docs/adr/0003-consent-as-a-gate.md)
 
 ---
 
+## Going further — the consent frontier
+
+The same consent + traceability thesis, extended onto the screen. Everything here
+runs on the mock/in-memory stack; the last two are **clearly-labelled
+simulations** — they demonstrate a pattern, not real infrastructure.
+
+- **Agent activity & authority console** — the delegated agent as a visible,
+  revocable object: a live action feed (each read tied to the grant that
+  authorized it), an authority card (scope, time remaining, Pause / Revoke), an
+  approval queue for its suggestion-only actions, and an intent → scope preview
+  before you grant. Pausing or revoking halts the feed immediately.
+- **Access receipts + permission simulation** — every audit entry re-rendered as
+  a plain-language receipt (who, what, under which grant, disclosed vs withheld,
+  with a JSON export), plus a "which fields would this scope share?" preview
+  before you grant.
+- **User-verifiable audit log** — the log is a SHA-256 hash chain; a **Verify
+  integrity** control recomputes every link **in your browser** (Web Crypto) and
+  reports intact / tampered, with a "download log + proof" export. Append-only you
+  can check, not just append-only by assertion.
+- **Portable, consent-gated alias** — a bank-neutral handle (`ada.cdb`) that
+  resolves to a **one-time routing token**, never the raw institution / transit /
+  account; resolution is consent-gated, re-pointing is a logged event, and every
+  resolution lands in the trail.
+- **Selective-disclosure attestation** *(simulated)* — prove a derived fact
+  ("holds ≥ $10k in liquid assets") and share only the signed conclusion, never
+  the balances. Signed with a demo key, not a real zero-knowledge proof.
+- **Verifiable-credential wallet** *(simulated)* — hold those attestations and
+  present a **selected** subset to a verifier that checks signatures against its
+  policy — the OID4VP-style holder → verifier flow, on mock data.
+
+---
+
 ## Architecture
 
 ```
@@ -114,9 +153,10 @@ that all data reads pass through ([ADR 0003](docs/adr/0003-consent-as-a-gate.md)
                                                         ▼
                          ┌─────────────────────────────────────────────────┐
    React client  ◀─REST─ │  CONSENT + TRACEABILITY GATE                     │
-   Overview /            │  every read → active in-scope grant? → minimize  │
-   Consent /             │  → append-only audit entry (who, what, withheld) │
-   Assistant             └─────────────────────────────────────────────────┘
+   6 views, all          │  every read → active in-scope grant? → minimize  │
+   through the gate      │  → append-only, hash-chained audit (who, what,   │
+                         │     withheld) — verifiable in the browser        │
+                         └─────────────────────────────────────────────────┘
                                                         ▲
                                     delegated agent (scoped, revocable, logged)
 ```
@@ -138,15 +178,24 @@ cdb-aggregator/
 │   │   ├── adapters/           # normalizers: raw source → canonical    (Items 5,6)
 │   │   ├── consent/            # store, gate, reader, audit, minimize   (Items 7,8)
 │   │   ├── agent/              # idle-cash finder (delegated intent)     (Item 11)
+│   │   ├── alias/              # portable, consent-gated alias resolver  (item-31)
+│   │   ├── attestation.py      # selective-disclosure proofs (sim)       (item-32)
+│   │   ├── verifier.py         # VC presentation / verifier (sim)        (item-33)
 │   │   ├── comparison.py       # old-way vs new-way contrast            (Item 6)
-│   │   └── api/                # consent + aggregation + agent HTTP API  (Items 9–11)
+│   │   └── api/                # HTTP API: consent, aggregation, agent,
+│   │                           #  receipts, alias, attestations         (Items 9–11, 28–33)
 │   └── tests/                  # pytest suite (100% coverage)
-├── frontend/                   # React (Vite): Overview / Consent / Assistant
+├── frontend/                   # React (Vite): 6 tabs — Overview, Consent &
+│                               #  Traceability, Assistant, Old vs New,
+│                               #  Portable address, Credentials
 ├── docs/
 │   ├── adr/                    # architecture decision records
 │   ├── screen-scraping.md      # "why screen-scraping is about to break"
+│   ├── THREAT_MODEL.md         # trust boundaries, STRIDE, audit integrity
+│   ├── fdx-conformance.md      # schema-validated FDX entities/fields
+│   ├── project-review.md       # walkthrough script
 │   ├── build-todo.md           # build roadmap (item-01 … item-14)
-│   ├── polish-todo.md          # follow-on roadmap (item-15 →)
+│   ├── polish-todo.md          # follow-on roadmap (item-15 … item-33)
 │   └── research-report.md      # regulatory & standards context
 ├── Dockerfile                  # one image: build the UI, serve it + the API
 ├── render.yaml                 # Render blueprint — one-click, auto-deploying URL
@@ -177,13 +226,22 @@ uvicorn app.main:app --reload --app-dir backend      # http://127.0.0.1:8000
 cd frontend && npm install && npm run dev            # http://localhost:5173
 ```
 
-Three tabs, all read through the consent gate:
+Six tabs, all reading through the consent gate:
 
 - **Overview** — household net worth, merged accounts, merged transaction feed.
-- **Consent & Traceability** — connections, scopes, expiry, one-tap revoke, and
-  the audit log (with *who* accessed — aggregator vs. delegated agent).
-- **Assistant** — delegate a scoped, revocable task to the idle-cash agent; it
-  suggests, it never acts.
+- **Consent & Traceability** — connections, scopes, expiry, one-tap revoke, the
+  audit log (with *who* accessed — aggregator vs. delegated agent), the in-browser
+  **chain verifier**, a **permission simulator**, and **access receipts**.
+- **Assistant** — delegate a scoped, revocable task to the idle-cash agent, then
+  the **authority console**: live action feed, Pause / Revoke, and an approval
+  queue. It suggests, it never acts.
+- **Old vs New** — a side-by-side contrast of credential screen-scraping and
+  token-based FDX access.
+- **Portable address** — a bank-neutral alias resolved to a one-time routing
+  token, never your account; consent-gated, with a resolution history.
+- **Credentials** *(simulation)* — prove a fact without sharing the data behind
+  it, hold the signed attestation in a wallet, and present a selected subset to a
+  verifier.
 
 ### Run it as one service (prod-style)
 
@@ -270,8 +328,17 @@ dependency order, each tagged so the history is a navigable timeline:
 | **4 — Differentiator** | 11 | Agentic delegation / intent layer |
 | **5 — Packaging** | 12–14 | Test hardening + CI; README + ADRs + explainer; project-review walkthrough |
 
+A follow-on roadmap continues the timeline (see
+[`docs/polish-todo.md`](docs/polish-todo.md)), same one-item-per-tag cadence:
+
+| Track | Items | What lands |
+|------:|-------|-----------|
+| **UI refinement** | 15–21 | Design system, dark mode, log controls, states, minimization signature, screen-scraping visual, accessibility |
+| **Hardening** | 22–27 | Hash-chained audit log, FAPI (PAR + PKCE), property-based tests, SQLite persistence, threat model, FDX schema conformance |
+| **Consent frontier** | 28–33 | Agent authority console; portable alias; user-verifiable audit log; access receipts + permission simulation; selective-disclosure + VC wallet *(simulated)* |
+
 ```bash
-git tag                      # item-01 … item-14
+git tag                      # item-01 … item-33
 git checkout item-07         # inspect any milestone (e.g. the consent layer)
 ```
 

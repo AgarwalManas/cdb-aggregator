@@ -18,6 +18,12 @@ are called out throughout.
 - **Access tokens** — bearer credentials to the (mock) data providers.
 - **The audit trail** — the tamper-evident record of every access. Its value is
   that it is complete and unaltered.
+- **Routing tokens** (item-31) — one-time, short-TTL references an alias resolves
+  to instead of raw institution/transit/account. Single-use and never encode the
+  coordinates, so a leaked token exposes nothing and cannot be replayed.
+- **The attestation signing key** (item-32/33, *simulated*) — a symmetric **demo**
+  key, deliberately not a secret. A real issuer would hold an asymmetric private
+  key and publish only the verifying key; called out below and in-product.
 
 ## Trust boundaries
 
@@ -84,6 +90,13 @@ are called out throughout.
   local value, not a managed secret.
 - **No rate limiting, no CSRF tokens** (state-changing calls are same-origin and
   cookie-guarded, but a production build would add CSRF defense and rate limits).
+- **Selective-disclosure proofs and the credential wallet are simulated**
+  (item-32/33). Facts are computed server-side and signed with a symmetric demo
+  key (HMAC) — tamper-evident for the demo, but **not** a zero-knowledge proof and
+  not an asymmetric issuer signature. Real deployment: SD-JWT VC / range proofs,
+  asymmetric keys, and OID4VP transport. The alias resolver (item-31) demonstrates
+  the addressing pattern only — every resolution is consent-gated and logged, but
+  it settles nothing and is not a central registry.
 
 ## What real FDX accreditation would require
 

@@ -30,10 +30,11 @@ participant from a screen scraper — extended to govern an AI agent.*
 > Judgment note to land: I'm honest that Phase-1 timing is uncertain — so I built
 > *for* the standard, I don't claim certified connectivity.
 
-## 3:00 – 10:00 · Live demo (the story in three tabs)
+## 3:00 – 10:00 · Live demo (the story in the tabs)
 
 **[Open the dashboard.]** One customer, three connected sources — a clean FDX
-bank, a messy legacy bank, a screen-scraped "OldBank".
+bank, a messy legacy bank, a screen-scraped "OldBank". Six tabs; lead with the
+first three, then dip into the consent-frontier tabs as time allows.
 
 1. **Overview.** Household net worth ($29,328.65), merged accounts grouped by
    source, a merged transaction feed. **[Point at the mortgage.]** It says
@@ -44,11 +45,25 @@ bank, a messy legacy bank, a screen-scraped "OldBank".
    REVOKED instantly, and its data disappears from Overview. **[Scroll the audit
    log.]** Every access — allowed *and* denied — is recorded, tied to the grant,
    showing what was disclosed and what was withheld, and *who* accessed.
+   **[Click Verify in your browser.]** The log is a SHA-256 hash chain; the
+   browser recomputes every link with Web Crypto — append-only you can *check*.
+   Below it, **access receipts** re-render each access in plain language, and a
+   **permission simulator** previews what a scope would share before you grant it.
 3. **Assistant. [Show the delegation, click Run.]** I delegated a scoped,
    revocable task to an agent; it found **$18,010.55** in idle cash and estimates
-   **~$414/year** from a move. It **suggests, it never acts.** **[Revoke the
-   delegation, click Run → 403.]** No consent, no agent. Its reads are in the same
-   audit log, attributed to "🤖 Assistant".
+   **~$414/year** from a move. It **suggests, it never acts** — the run lands in
+   an **approval queue**. The **authority console** shows a live feed of the
+   agent's reads with a Pause / Revoke card. **[Revoke, click Run → 403.]** No
+   consent, no agent. Its reads are in the same audit log, attributed to the
+   assistant.
+4. **Portable address.** A bank-neutral alias (`ada.cdb`) resolves to a
+   **one-time routing token** — never the bank, branch, or account. **[Resolve as
+   a counterparty, then redeem the token.]** Consent-gated: revoke the account's
+   grant and the same lookup returns nothing.
+5. **Credentials** *(labelled a simulation).* **[Prove "holds ≥ $10k liquid".]**
+   Only the signed conclusion is shared, not the balances. Hold it in the wallet,
+   **present a selected subset to a verifier**, and watch a tampered copy get
+   rejected on its signature.
 
 ## 10:00 – 15:00 · Architecture
 
@@ -109,7 +124,8 @@ Be the one to raise the limits — it reads as judgment.
   through. Adapters, consent enforcement, and minimization get the heaviest tests.
 - **GitHub Actions** runs lint + tests + coverage gate + the frontend build on
   every push; decisions are recorded as **ADRs**; the history is a tagged timeline
-  (`item-01 … item-14`).
+  (`item-01 … item-33` — the core build plus the UI-refinement, hardening, and
+  consent-frontier follow-on).
 
 ## 25:00 – 30:00 · Q&A — anticipated
 
