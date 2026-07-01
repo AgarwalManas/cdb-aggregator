@@ -20,8 +20,8 @@ jobs:
         run: ruff check backend
       - name: Format check (ruff)
         run: ruff format --check backend
-      - name: Tests + coverage
-        run: python -m pytest --cov=app --cov-report=term-missing --cov-fail-under=90
+      - name: Tests + coverage (100% required)
+        run: python -m pytest --cov=app --cov-report=term-missing --cov-fail-under=100
 
   frontend:
     name: Frontend (build)

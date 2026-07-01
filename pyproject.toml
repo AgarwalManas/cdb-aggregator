@@ -26,6 +26,13 @@ dev = [
 pythonpath = ["backend"]
 testpaths = ["backend/tests"]
 addopts = "-q"
+# Warnings are errors: nothing slips through silently in a financial codebase.
+# The one exception is a third-party deprecation we can't act on — Starlette's
+# TestClient deprecating httpx in favour of httpx2. Our own code emits none.
+filterwarnings = [
+    "error",
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated:Warning",
+]
 
 [tool.coverage.run]
 source = ["app"]

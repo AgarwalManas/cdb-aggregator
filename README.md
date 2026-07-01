@@ -10,7 +10,8 @@ screen scraper.
 > **Status:** phased build in progress. The canonical model, three mock
 > providers (FDX / messy / screen-scraped), the normalizer, the consent +
 > traceability engine, both React dashboards, and an agentic-delegation layer are
-> in; CI runs lint + tests (≈98% coverage) + the frontend build on every push.
+> in; CI runs lint + tests (100% coverage, warnings-as-errors) + the frontend
+> build on every push.
 > See [Roadmap](#roadmap). A full rewrite lands in Item 13.
 
 ---
