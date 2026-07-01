@@ -4,6 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CDB Aggregator — Consent &amp; Traceability</title>
+    <!-- Set the theme before first paint (no flash): saved choice, else the OS setting. -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("cdb-theme");
+          var dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.setAttribute("data-theme", saved || (dark ? "dark" : "light"));
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

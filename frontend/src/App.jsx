@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { getScopes, resetDemo } from "./api.js";
+import ThemeToggle from "./components/ThemeToggle.jsx";
 import AgentPage from "./pages/AgentPage.jsx";
 import ConsentPage from "./pages/ConsentPage.jsx";
 import OverviewPage from "./pages/OverviewPage.jsx";
@@ -49,6 +50,7 @@ export default function App() {
           <p className="subtitle">{TABS[tab].subtitle}</p>
         </div>
         <div className="topbar-right">
+          <ThemeToggle />
           <button
             className="reset-demo"
             onClick={handleReset}

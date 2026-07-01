@@ -79,6 +79,29 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Smoothly cross-fade colours when the theme flips (auto-disabled under
+   prefers-reduced-motion by the rule at the foot of this file). */
+body,
+.card,
+.audit,
+.audit thead th,
+.who,
+.reset-demo,
+.theme-toggle,
+.networth,
+.chip,
+.badge,
+.tabs,
+.tabs button,
+button,
+.connect-form select,
+.connect-form input {
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease;
+}
+
 /* Money and any figures align in columns — the ledger discipline. */
 .amount,
 .nw-total,
@@ -139,6 +162,26 @@ code {
 .reset-demo:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent);
+}
+.theme-toggle {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  color: var(--muted);
+  border-radius: 999px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.theme-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.theme-toggle svg {
+  width: 17px;
+  height: 17px;
 }
 .who {
   display: flex;
