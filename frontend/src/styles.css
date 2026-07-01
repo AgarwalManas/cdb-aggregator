@@ -91,8 +91,7 @@ body,
 .networth,
 .chip,
 .badge,
-.tabs,
-.tabs button,
+.nav-item,
 button,
 .connect-form select,
 .connect-form input {
@@ -119,10 +118,200 @@ code {
   border-radius: 4px;
 }
 
-.page {
-  max-width: 1040px;
+/* App shell: fixed sidebar + scrolling main (slice 1 of the layout refactor). */
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+.sidebar {
+  width: 250px;
+  flex: none;
+  box-sizing: border-box;
+  border-right: 1px solid var(--hairline);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 20px 14px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+}
+.brand-mark {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: var(--accent);
+  flex: none;
+}
+.brand-name {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+.side-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1;
+}
+.nav-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.nav-heading {
+  margin: 0 0 6px;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.nav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  color: var(--ink-soft);
+  font-weight: 500;
+  text-align: left;
+}
+.nav-item:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.nav-item.active {
+  background: var(--accent-tint);
+  color: var(--accent);
+  font-weight: 600;
+}
+.nav-tag {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+.side-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+}
+.side-foot .reset-demo {
+  flex: 1;
+}
+.main {
+  flex: 1;
+  min-width: 0;
+}
+.main-inner {
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 40px 24px 64px;
+  padding: 40px 32px 64px;
+}
+
+/* Stub pages (Dashboard hub + explainer placeholders) until slices 2–4 land. */
+.stub-hero {
+  margin-bottom: 20px;
+}
+.stub-hero h2 {
+  margin: 0 0 6px;
+}
+.stub-tip {
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  background: var(--accent-tint);
+  color: var(--accent);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+}
+.stub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+.stub-link {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  text-align: left;
+  position: relative;
+  padding: 18px;
+}
+.stub-link:hover {
+  border-color: var(--accent);
+}
+.stub-link strong {
+  font-size: 15px;
+}
+.stub-arrow {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 900px) {
+  .app {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: auto;
+    height: auto;
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid var(--hairline);
+    gap: 14px;
+    padding: 14px 16px;
+  }
+  .side-nav {
+    gap: 12px;
+  }
+  .nav-group ul {
+    flex-direction: row;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 4px;
+  }
+  .nav-group ul::-webkit-scrollbar {
+    display: none;
+  }
+  .nav-item {
+    white-space: nowrap;
+    width: auto;
+  }
+  .side-foot {
+    padding: 0;
+  }
+  .main-inner {
+    padding: 24px 18px 48px;
+  }
 }
 
 /* Top bar */
@@ -540,38 +729,6 @@ button:disabled {
   color: var(--accent);
   text-decoration: underline;
   cursor: pointer;
-}
-
-/* Tabs */
-.tabs {
-  display: flex;
-  gap: 4px;
-  border-bottom: 1px solid var(--hairline);
-  margin-bottom: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.tabs::-webkit-scrollbar {
-  display: none;
-}
-.tabs button {
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
-  padding: 10px 4px;
-  margin-right: 22px;
-  color: var(--muted);
-  font-weight: 600;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.tabs button:hover {
-  color: var(--ink);
-}
-.tabs button.active {
-  color: var(--ink);
-  border-bottom-color: var(--accent);
 }
 
 /* Net-worth "statement" — a calm near-black panel; the total leads in mono. */
