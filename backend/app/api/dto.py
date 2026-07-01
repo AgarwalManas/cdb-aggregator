@@ -448,3 +448,44 @@ class VerifyAttestationRequest(ApiModel):
 class AttestationVerificationView(ApiModel):
     valid: bool
     reason: str
+
+
+# --- Verifiable-presentation / wallet (item-33, simulated) -------------------
+
+
+class RequirementView(ApiModel):
+    fact_id: str
+    question: str
+    expected: bool  # the fact must hold (True) to satisfy the verifier
+
+
+class VerifierView(ApiModel):
+    """A demo verifier and the facts it needs to see."""
+
+    verifier_id: str
+    name: str
+    purpose: str
+    requirements: list[RequirementView]
+
+
+class PresentRequest(ApiModel):
+    verifier_id: str
+    attestations: list[AttestationView]  # the selectively-disclosed subset
+
+
+class RequirementResultView(ApiModel):
+    fact_id: str
+    question: str
+    expected: bool
+    satisfied: bool
+    detail: str
+
+
+class PresentationResultView(ApiModel):
+    """The verifier's decision on a presentation — accept/reject and why."""
+
+    verifier_id: str
+    verifier_name: str
+    accepted: bool
+    presented_count: int
+    results: list[RequirementResultView]

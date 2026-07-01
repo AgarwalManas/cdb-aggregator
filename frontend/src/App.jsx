@@ -32,7 +32,7 @@ const TABS = {
   },
   credentials: {
     title: "Credentials & proofs",
-    subtitle: "Prove a fact without sharing the data behind it — a selective-disclosure simulation.",
+    subtitle: "Prove a fact, hold it in a wallet, present it to a verifier — a simulation.",
   },
 };
 

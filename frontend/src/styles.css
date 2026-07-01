@@ -1277,6 +1277,101 @@ button:disabled {
   margin-top: 0;
 }
 
+/* VC wallet + presentation (item-33) */
+.wallet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.credential {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  padding: 14px 16px;
+}
+.credential.picked {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.credential input {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  accent-color: var(--accent);
+  flex: none;
+}
+.credential-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.credential-claim {
+  font-weight: 600;
+  font-size: 13.5px;
+}
+.credential-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.verifier-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.verifier-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tamper-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.tamper-toggle input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+}
+.verifier-card .btn-primary {
+  align-self: flex-start;
+}
+.presentation {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.requirement-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.requirement-list li {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+}
+.req-icon {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  flex: none;
+}
+.requirement-list li.met .req-icon {
+  color: var(--accent);
+}
+.requirement-list li.unmet .req-icon {
+  color: var(--muted);
+}
+
 /* An error stands out by contrast and weight, not by a new colour. */
 .error {
   background: var(--surface-2);

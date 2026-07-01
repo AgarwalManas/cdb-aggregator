@@ -47,6 +47,15 @@ export const verifyAttestation = (attestation) =>
     body: JSON.stringify({ attestation }),
   });
 
+// Verifiable-credential wallet + presentation (item-33, simulated)
+export const getVerifiers = () => request("/attestations/verifiers");
+export const presentCredentials = (verifierId, attestations) =>
+  request("/attestations/present", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ verifierId, attestations }),
+  });
+
 // Aggregation (Item 10)
 export const getAccounts = () => request("/accounts");
 export const getTransactions = () => request("/transactions");

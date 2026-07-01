@@ -20,10 +20,15 @@ from app.api.dto import (
     AttestationView,
     FactView,
     IssueAttestationRequest,
+    PresentationResultView,
+    PresentRequest,
+    RequirementView,
+    VerifierView,
     VerifyAttestationRequest,
 )
 from app.api.session import get_state
 from app.attestation import FACTS, issue, verify
+from app.verifier import VERIFIERS, present
 
 router = APIRouter(prefix="/api/attestations", tags=["attestations"])
 
@@ -64,3 +69,29 @@ def issue_attestation(body: IssueAttestationRequest, state: StateDep) -> Attesta
 def verify_attestation(body: VerifyAttestationRequest) -> AttestationVerificationView:
     valid, reason = verify(body.attestation.model_dump())
     return AttestationVerificationView(valid=valid, reason=reason)
+
+
+@router.get("/verifiers", summary="Demo verifiers and the facts they need (item-33)")
+def list_verifiers() -> list[VerifierView]:
+    return [
+        VerifierView(
+            verifier_id=v.verifier_id,
+            name=v.name,
+            purpose=v.purpose,
+            requirements=[
+                RequirementView(
+                    fact_id=r.fact_id, question=FACTS[r.fact_id].question, expected=r.expected
+                )
+                for r in v.requirements
+            ],
+        )
+        for v in VERIFIERS.values()
+    ]
+
+
+@router.post("/present", summary="Present selected credentials to a verifier (item-33)")
+def present_credentials(body: PresentRequest) -> PresentationResultView:
+    if body.verifier_id not in VERIFIERS:
+        raise HTTPException(status_code=404, detail="unknown verifier")
+    outcome = present(body.verifier_id, [a.model_dump() for a in body.attestations])
+    return PresentationResultView(**outcome)
