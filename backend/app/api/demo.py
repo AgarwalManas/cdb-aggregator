@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 
 from app.adapters.base import SourceAdapter
+from app.agent import AGENT_ID, REQUIRED_SCOPES, run_cash_finder
 from app.consent import (
     AuditLog,
     ConsentDenied,
@@ -74,6 +75,7 @@ class AggregatorState:
     adapter: SourceAdapter
     customer_id: str = CUSTOMER_ID
     recipient: str = RECIPIENT
+    agent_delegation_id: str | None = None
     _seq: int = field(default=0, repr=False)
 
     def next_connection_id(self) -> str:
@@ -90,6 +92,21 @@ class AggregatorState:
             if consent is not None and account_id in consent.account_ids:
                 return connection
         return None
+
+    def balance_shared_account_ids(self, at: datetime | None = None) -> list[str]:
+        """Accounts the aggregator holds balances for — the most the agent can get.
+
+        The customer can only delegate to an agent what they themselves shared
+        with the aggregator, so a delegation is capped at these accounts.
+        """
+        ids: list[str] = []
+        for connection in self.connections:
+            consent = self.store.get(connection.connection_id)
+            if consent is None or not consent.is_active(at):
+                continue
+            if ConsentScope.BALANCES in consent.scopes:
+                ids.extend(a for a in consent.account_ids if a not in ids)
+        return ids
 
 
 def _demo_customer() -> Customer:
@@ -309,7 +326,33 @@ def build_demo_state(now: datetime | None = None) -> AggregatorState:
         connections.append(Connection(connection_id, source_id, SOURCES[source_id]))
 
     _seed_audit_trail(state, now)
+    _seed_agent_delegation(state, now)
     return state
+
+
+def _seed_agent_delegation(state: AggregatorState, now: datetime) -> None:
+    """Delegate the idle-cash task to the agent and run it once (for the trail)."""
+    account_ids = state.balance_shared_account_ids(now)
+    consent = state.store.grant(
+        state.customer_id,
+        AGENT_ID,  # the agent identity is the recipient of this grant
+        REQUIRED_SCOPES,
+        duration=timedelta(days=30),
+        account_ids=account_ids,
+        now=now,
+        consent_id="agent-del-1",
+    )
+    state.agent_delegation_id = consent.consent_id
+    # Run once so the traceability log opens showing the agent's (logged) access.
+    run_cash_finder(
+        state.reader(),
+        customer_id=state.customer_id,
+        account_ids=account_ids,
+        source_label=lambda aid: (
+            c.source_label if (c := state.connection_for_account(aid)) else None
+        ),
+        at=now,
+    )
 
 
 def _seed_audit_trail(state: AggregatorState, now: datetime) -> None:

@@ -22,6 +22,12 @@ export const getAccounts = () => request("/accounts");
 export const getTransactions = () => request("/transactions");
 export const getNetWorth = () => request("/net-worth");
 
+// Agentic delegation (Item 11)
+export const getDelegation = () => request("/agent/delegation");
+export const delegateAgent = () => request("/agent/delegation", { method: "POST" });
+export const revokeDelegation = () => request("/agent/delegation/revoke", { method: "POST" });
+export const runAgent = () => request("/agent/run", { method: "POST" });
+
 export const revokeConnection = (connectionId) =>
   request(`/connections/${connectionId}/revoke`, { method: "POST" });
 

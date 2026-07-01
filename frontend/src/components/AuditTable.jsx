@@ -11,6 +11,7 @@ export default function AuditTable({ events, catalog }) {
       <thead>
         <tr>
           <th>When</th>
+          <th>By</th>
           <th>Action</th>
           <th>Scope</th>
           <th>Account</th>
@@ -22,6 +23,13 @@ export default function AuditTable({ events, catalog }) {
         {events.map((e, i) => (
           <tr key={i} className={e.allowed ? "allowed" : "denied"}>
             <td className="muted">{formatDateTime(e.occurredAt)}</td>
+            <td>
+              {e.recipient?.startsWith("agent:") ? (
+                <span className="by-agent">🤖 Assistant</span>
+              ) : (
+                <span className="muted">Aggregator</span>
+              )}
+            </td>
             <td>
               <code>{e.action}</code>
             </td>

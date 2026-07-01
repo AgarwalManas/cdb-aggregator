@@ -96,7 +96,7 @@ Frontend is **React** either way (their frontend is React/React Native).
 
 ## Phase 4 — Differentiator (pick ONE)
 
-### [ ] Item 11 — Differentiator
+### [x] Item 11 — Differentiator (chose A — agentic delegation / intent layer)
 **Produces:** one standout capability. Choose based on where Wealthsimple is heading:
 - **A — Agentic delegation / intent layer:** delegate a scoped, revocable, fully logged task to an AI agent (e.g., "find idle cash earning under 1% and suggest a move"). Lands on FDX's 2026 agentic-AI themes and the "intelligent assistant in the background" vision. *Highest-upside, least commoditized.*
 - **B — Household aggregation deepening:** richer multi-member net-worth, shared goals, surplus insights. *Safest; mirrors a feature they just shipped.*

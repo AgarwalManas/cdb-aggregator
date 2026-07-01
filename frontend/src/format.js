@@ -7,6 +7,10 @@ export function formatMoney(value, currency = "CAD") {
   }).format(Number(value));
 }
 
+export function formatPct(rate) {
+  return `${(Number(rate) * 100).toFixed(2)}%`;
+}
+
 export function formatDateTime(iso) {
   return new Date(iso).toLocaleString(undefined, {
     year: "numeric",

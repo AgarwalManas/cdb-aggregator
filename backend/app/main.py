@@ -17,7 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.api.demo import build_demo_state
-from app.api.routes import aggregation, consent, health
+from app.api.routes import agent, aggregation, consent, health
 from app.core.config import get_settings
 
 
@@ -49,6 +49,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(consent.router)  # Item 9: consent dashboard API
     app.include_router(aggregation.router)  # Item 10: unified accounts / net worth
+    app.include_router(agent.router)  # Item 11: agentic delegation
 
     @app.get("/", tags=["meta"], summary="Service root")
     def root() -> dict[str, str]:

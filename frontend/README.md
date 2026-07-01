@@ -1,6 +1,6 @@
 # Frontend — Dashboard (Items 9-10)
 
-The **React** client, with two tabs:
+The **React** client, with three tabs:
 
 - **Overview** (Item 10): household **net worth**, **merged accounts** across every
   connected source, and a **merged transaction feed**. Every figure is read
@@ -8,7 +8,11 @@ The **React** client, with two tabs:
   revoked) simply isn't counted.
 - **Consent & Traceability** (Item 9): list connections, see each one's scopes +
   expiry, **one-tap revoke**, connect a new source with only the scopes you
-  choose, and read the **traceability log** of every access (allowed or denied).
+  choose, and read the **traceability log** of every access (allowed or denied,
+  and *who* accessed — the aggregator or a delegated agent).
+- **Assistant** (Item 11): delegate a **scoped, revocable** task to an agent (the
+  "Idle-Cash Finder"). It reads only what you delegate, returns a **suggestion —
+  never an action**, and its every access is logged against the agent.
 
 Built with **Vite + React**. It talks to the FastAPI backend over the consent +
 aggregation API (`/api/...`, see `backend/app/api/routes/`).
@@ -59,13 +63,16 @@ src/
   pages/
     OverviewPage.jsx      net worth + accounts + transactions (Item 10)
     ConsentPage.jsx       connections + revoke + audit log (Item 9)
+    AgentPage.jsx         delegate + run + suggestion (Item 11)
   components/
     NetWorthPanel.jsx     household net-worth hero
     AccountsList.jsx      merged accounts grouped by source
     TransactionsFeed.jsx  merged transaction feed
     ConnectionCard.jsx    a connection: status, scopes, expiry, revoke
     ConnectForm.jsx       grant a new connection with chosen scopes
-    AuditTable.jsx        the traceability log
+    AuditTable.jsx        the traceability log (with the accessor)
+    DelegationCard.jsx    the agent + its delegation, delegate/revoke
+    AssistantSuggestion.jsx  the agent's advisory output
     ScopeChip.jsx         a scope pill (human label from /api/scopes)
   styles.css
 ```

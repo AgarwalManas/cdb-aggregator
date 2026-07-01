@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { getScopes } from "./api.js";
+import AgentPage from "./pages/AgentPage.jsx";
 import ConsentPage from "./pages/ConsentPage.jsx";
 import OverviewPage from "./pages/OverviewPage.jsx";
 
@@ -12,6 +13,10 @@ const TABS = {
   consent: {
     title: "Consent & Traceability",
     subtitle: "Choose exactly who can see your financial data — and revoke it anytime.",
+  },
+  assistant: {
+    title: "Assistant",
+    subtitle: "Delegate a scoped, revocable task to an agent — it suggests, it never acts.",
   },
 };
 
@@ -48,9 +53,14 @@ export default function App() {
         <button className={tab === "consent" ? "active" : ""} onClick={() => setTab("consent")}>
           Consent &amp; Traceability
         </button>
+        <button className={tab === "assistant" ? "active" : ""} onClick={() => setTab("assistant")}>
+          Assistant
+        </button>
       </nav>
 
-      {tab === "overview" ? <OverviewPage /> : <ConsentPage scopeCatalog={scopeCatalog} />}
+      {tab === "overview" && <OverviewPage />}
+      {tab === "consent" && <ConsentPage scopeCatalog={scopeCatalog} />}
+      {tab === "assistant" && <AgentPage scopeCatalog={scopeCatalog} />}
 
       <footer className="foot">cdb-aggregator · FDX-aligned consent &amp; traceability demo</footer>
     </div>

@@ -65,6 +65,7 @@ class AuditEventView(ApiModel):
 
     occurred_at: datetime
     action: str
+    recipient: str  # who accessed — the aggregator or a delegated agent
     scope: ConsentScope
     account_id: str | None
     allowed: bool
@@ -138,3 +139,48 @@ class NetWorthView(ApiModel):
     member_name: str
     included: list[NetWorthLine]
     excluded: list[ExcludedAccount]
+
+
+# --- Agentic delegation (Item 11) --------------------------------------------
+
+
+class DelegationView(ApiModel):
+    """The task delegated to the agent, and the consent governing it."""
+
+    agent_id: str
+    agent_name: str
+    description: str
+    status: str  # GRANTED / EXPIRED / REVOKED / NONE
+    scopes: list[ConsentScope]
+    account_ids: list[str]
+    created_at: datetime | None = None
+    expires_at: datetime | None = None
+    revoked_at: datetime | None = None
+
+
+class AnalyzedAccountView(ApiModel):
+    account_id: str
+    label: str
+    source_label: str | None
+    balance: Decimal
+    rate: Decimal
+    idle: Decimal
+    estimated_gain: Decimal
+
+
+class NotCountedView(ApiModel):
+    account_id: str
+    reason: str
+
+
+class SuggestionView(ApiModel):
+    """The agent's advisory output — a suggestion, never an action."""
+
+    idle_cash: Decimal
+    currency: str
+    estimated_annual_gain: Decimal
+    target_rate: Decimal
+    threshold_rate: Decimal
+    analyzed: list[AnalyzedAccountView]
+    not_counted: list[NotCountedView]
+    advisory: str = "This is a suggestion. Nothing was moved — the assistant has read-only access."

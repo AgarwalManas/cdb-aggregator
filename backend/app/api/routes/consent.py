@@ -98,13 +98,19 @@ def revoke_connection(connection_id: str, state: StateDep) -> ConnectionView:
     return _view(state, connection, consent)
 
 
+#: The full log is append-only and grows without bound; the API returns a recent
+#: window (a real UI would paginate). Every event stays in the underlying log.
+AUDIT_PAGE_SIZE = 50
+
+
 @router.get("/audit", summary="Traceability audit log (most recent first)")
 def list_audit(state: StateDep) -> list[AuditEventView]:
-    events = reversed(state.audit.all())
+    events = list(reversed(state.audit.all()))[:AUDIT_PAGE_SIZE]
     return [
         AuditEventView(
             occurred_at=e.occurred_at,
             action=e.action,
+            recipient=e.recipient,
             scope=e.scope,
             account_id=e.account_id,
             allowed=e.allowed,
