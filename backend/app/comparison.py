@@ -5,10 +5,9 @@ customer's bank data. It's deliberately code (not just prose) so it can be
 asserted in tests and rendered wherever it's useful — and because the whole
 project is an argument for the right-hand column.
 
-The framing echoes what Wealthsimple has publicly documented: its Roundup
-feature once averaged ~10 failed bank connections a day on screen-scraping
-aggregators, and its open-banking advocacy is largely about replacing exactly
-this. See ``docs/research-report.md``.
+The framing reflects a well-documented problem: scraping-based aggregators have
+reported on the order of ten failed bank connections a day, and open-banking
+advocacy is largely about replacing exactly this. See ``docs/research-report.md``.
 """
 
 from __future__ import annotations

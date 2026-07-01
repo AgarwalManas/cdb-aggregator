@@ -7,7 +7,7 @@ organizes balances and endpoints, and validate that the type actually belongs to
 the category — a cheap check that catches a whole class of normalizer mistakes.
 
 The type enumeration is a pragmatic, Canada-flavored subset of FDX's full list
-(Wealthsimple's world: TFSA/RRSP/RESP/FHSA registered accounts), not the entire
+(the Canadian registered-account world: TFSA/RRSP/RESP/FHSA), not the entire
 specification.
 """
 

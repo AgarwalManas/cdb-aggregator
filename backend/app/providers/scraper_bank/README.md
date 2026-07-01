@@ -5,9 +5,9 @@ statement page. It exists to be *scraped*, so the project can dramatize the "old
 way" (credential sharing + fragile HTML parsing) against the token-based FDX
 "new way".
 
-This directly echoes the pain Wealthsimple has publicly documented — its Roundup
-feature once averaged ~10 failed bank connections per day on screen-scraping
-aggregators (see `docs/research-report.md`).
+This directly echoes a well-documented pain: scraping-based aggregators have
+reported on the order of ten failed bank connections a day (see
+`docs/research-report.md`).
 
 ## Run it
 

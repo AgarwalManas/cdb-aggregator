@@ -1,9 +1,8 @@
 # Project Review — 30-minute walkthrough
 
-A delivery script for a project-review interview (a real stage in Wealthsimple's
-engineering process). Timings are a guide; leave ~8 minutes for questions. Demo
-cues are in **[brackets]**. The goal is to show judgment — *why* it's built this
-way — not to narrate every file.
+A delivery script for a project walkthrough. Timings are a guide; leave ~8
+minutes for questions. Demo cues are in **[brackets]**. The goal is to show
+judgment — *why* it's built this way — not to narrate every file.
 
 **One-line pitch:** *An FDX-aligned open-banking aggregator whose core product is
 a consent + traceability layer — the thing that separates an accredited
@@ -18,8 +17,8 @@ participant from a screen scraper — extended to govern an AI agent.*
   HTML. Two structural problems: it's **brittle** (breaks when the bank restyles a
   page), and it's **all-or-nothing** (no scope, no expiry, no real revocation, no
   consent record).
-- This is a documented pain, not a hypothetical — e.g. Wealthsimple's Roundup once
-  averaged ~10 failed bank connections a day on scraping aggregators.
+- This is a documented pain, not a hypothetical — scraping-based aggregators have
+  reported on the order of ten failed bank connections a day.
 - The ground just shifted: **Bill C-15 (Royal Assent March 26, 2026)** replaced
   the original act with a new **Consumer-Driven Banking Act**, oversight moved to
   the **Bank of Canada**, and the technical standard is **FDX** — OAuth2 + FAPI,

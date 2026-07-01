@@ -144,8 +144,9 @@ cdb-aggregator/
 ├── docs/
 │   ├── adr/                    # architecture decision records
 │   ├── screen-scraping.md      # "why screen-scraping is about to break"
-│   ├── build-todo.md           # the 14-item build plan
-│   └── research-report.md      # strategic context
+│   ├── build-todo.md           # build roadmap (item-01 … item-14)
+│   ├── polish-todo.md          # follow-on roadmap (item-15 →)
+│   └── research-report.md      # regulatory & standards context
 ├── Dockerfile                  # one image: build the UI, serve it + the API
 ├── render.yaml                 # Render blueprint — one-click, auto-deploying URL
 └── .github/workflows/          # ci.yml (lint+tests+build) · tag-items.yml · retag.yml

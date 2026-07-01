@@ -1,1 +1,1 @@
-"""Test suite. Wealthsimple values real automated tests; so does this project."""
+"""Test suite. Real automated tests are a first-class part of this project."""

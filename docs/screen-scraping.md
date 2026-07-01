@@ -23,11 +23,11 @@ Two structural problems fall out of this:
   restyles its site — renames a CSS class, reorders a column — the scraper
   silently breaks. There is no contract, so there is no stability.
 
-Wealthsimple documented this pain concretely: its Roundup feature once averaged
-**~10 failed bank connections per day** on screen-scraping aggregators, and its
-2019 open-banking submission cited exactly this brittleness. The industry still
+This pain has been documented concretely: scraping-based aggregators have
+reported on the order of **~10 failed bank connections per day**, and Canadian
+open-banking submissions have cited exactly this brittleness. The industry still
 leans on credential-based connectivity (Flinks, Plaid, and in-house tools) to
-paper over it. (Sources: this project's [`docs/research-report.md`](research-report.md).)
+paper over it. (Context: this project's [`docs/research-report.md`](research-report.md).)
 
 ## Why it's about to break
 
@@ -35,8 +35,8 @@ Canada's regulatory ground has shifted:
 
 - **Bill C-15 received Royal Assent on March 26, 2026**, repealing the original
   Consumer-Driven Banking Act and replacing it with a comprehensive new **CDBA**,
-  and moving oversight to the **Bank of Canada** (which already supervises fintechs
-  like Wealthsimple under the Retail Payment Activities Act).
+  and moving oversight to the **Bank of Canada** (which already supervises payment
+  service providers under the Retail Payment Activities Act).
 - **Phase 1 (read access)** was targeted for early 2026; **Phase 2 (write —
   payment initiation, account switching)** for mid-2027, contingent on Real-Time
   Rail. (As of early 2026 the Bank of Canada had not committed to a firm launch
