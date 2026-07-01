@@ -1,4 +1,5 @@
 import { expiryLabel } from "../format.js";
+import ConfirmButton from "./ConfirmButton.jsx";
 import ScopeChip from "./ScopeChip.jsx";
 
 // One connected data source: its status, the scopes it can see, when it expires,
@@ -27,13 +28,18 @@ export default function ConnectionCard({ connection, catalog, onRevoke, busy }) 
         {connection.accountIds.length === 1 ? "" : "s"}
       </p>
 
-      <button
-        className="btn-revoke"
-        disabled={!canRevoke || busy}
-        onClick={() => onRevoke(connection.connectionId)}
-      >
-        {canRevoke ? "Revoke access" : "Access ended"}
-      </button>
+      {canRevoke ? (
+        <ConfirmButton
+          label="Revoke access"
+          confirmLabel={`Confirm — revoke ${connection.sourceLabel}`}
+          onConfirm={() => onRevoke(connection.connectionId)}
+          busy={busy}
+        />
+      ) : (
+        <button className="btn-revoke" disabled>
+          Access ended
+        </button>
+      )}
     </div>
   );
 }

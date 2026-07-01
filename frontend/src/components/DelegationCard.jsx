@@ -1,4 +1,5 @@
 import { formatDate } from "../format.js";
+import ConfirmButton from "./ConfirmButton.jsx";
 import ScopeChip from "./ScopeChip.jsx";
 
 // The agent's identity + the delegation governing it: scoped, time-limited,
@@ -33,9 +34,12 @@ export default function DelegationCard({ delegation, catalog, onDelegate, onRevo
       )}
 
       {active ? (
-        <button className="btn-revoke" disabled={busy} onClick={onRevoke}>
-          Revoke delegation
-        </button>
+        <ConfirmButton
+          label="Revoke delegation"
+          confirmLabel="Confirm — revoke delegation"
+          onConfirm={onRevoke}
+          busy={busy}
+        />
       ) : (
         <button className="btn-primary" disabled={busy} onClick={onDelegate}>
           Delegate this task

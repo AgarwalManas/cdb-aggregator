@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { getAccounts, getNetWorth, getTransactions } from "../api.js";
 import AccountsList from "../components/AccountsList.jsx";
 import NetWorthPanel from "../components/NetWorthPanel.jsx";
+import { SkeletonCard } from "../components/Skeleton.jsx";
 import TransactionsFeed from "../components/TransactionsFeed.jsx";
 
 // The unified client view (Item 10): net worth, merged accounts, merged feed.
@@ -11,6 +12,7 @@ export default function OverviewPage() {
   const [netWorth, setNetWorth] = useState(null);
   const [accounts, setAccounts] = useState([]);
   const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -26,11 +28,33 @@ export default function OverviewPage() {
         setTransactions(txns);
       } catch (err) {
         setError(String(err));
+      } finally {
+        setLoading(false);
       }
     })();
   }, []);
 
   if (error) return <div className="error">{error}</div>;
+
+  if (loading) {
+    return (
+      <>
+        <section>
+          <SkeletonCard lines={4} />
+        </section>
+        <div className="overview-cols">
+          <section>
+            <h2>Accounts</h2>
+            <SkeletonCard lines={5} />
+          </section>
+          <section>
+            <h2>Recent activity</h2>
+            <SkeletonCard lines={5} />
+          </section>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

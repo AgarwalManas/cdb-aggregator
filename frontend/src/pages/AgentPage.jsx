@@ -3,12 +3,16 @@ import { useCallback, useEffect, useState } from "react";
 import { delegateAgent, getDelegation, revokeDelegation, runAgent } from "../api.js";
 import AssistantSuggestion from "../components/AssistantSuggestion.jsx";
 import DelegationCard from "../components/DelegationCard.jsx";
+import { SkeletonCard } from "../components/Skeleton.jsx";
+import { useToast } from "../components/Toaster.jsx";
 
 // The agentic delegation / intent layer (Item 11): delegate a scoped, revocable,
 // logged task to the agent, run it, and see its suggestion.
 export default function AgentPage({ scopeCatalog }) {
+  const toast = useToast();
   const [delegation, setDelegation] = useState(null);
   const [suggestion, setSuggestion] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -23,15 +27,18 @@ export default function AgentPage({ scopeCatalog }) {
   }, []);
 
   useEffect(() => {
-    load().catch((err) => setError(String(err)));
+    load()
+      .catch((err) => setError(String(err)))
+      .finally(() => setLoading(false));
   }, [load]);
 
-  async function withBusy(fn) {
+  async function withBusy(fn, successMsg) {
     setBusy(true);
     setError(null);
     try {
       await fn();
       await load();
+      if (successMsg) toast(successMsg);
     } catch (err) {
       setError(String(err));
     } finally {
@@ -39,8 +46,8 @@ export default function AgentPage({ scopeCatalog }) {
     }
   }
 
-  const onDelegate = () => withBusy(delegateAgent);
-  const onRevoke = () => withBusy(revokeDelegation);
+  const onDelegate = () => withBusy(delegateAgent, "Task delegated to the assistant.");
+  const onRevoke = () => withBusy(revokeDelegation, "Delegation revoked.");
   const onRun = () => withBusy(async () => setSuggestion(await runAgent()));
 
   return (
@@ -54,25 +61,31 @@ export default function AgentPage({ scopeCatalog }) {
             A task delegated to an agent is just another consent — scoped, time-limited, and
             revocable. Everything it reads is logged against the agent in your traceability log.
           </p>
-          <DelegationCard
-            delegation={delegation}
-            catalog={scopeCatalog}
-            onDelegate={onDelegate}
-            onRevoke={onRevoke}
-            busy={busy}
-          />
+          {loading ? (
+            <SkeletonCard lines={4} />
+          ) : (
+            <DelegationCard
+              delegation={delegation}
+              catalog={scopeCatalog}
+              onDelegate={onDelegate}
+              onRevoke={onRevoke}
+              busy={busy}
+            />
+          )}
         </section>
 
         <section>
           <div className="suggestion-head">
             <h2>Suggestion</h2>
-            {delegation?.status === "GRANTED" && (
+            {!loading && delegation?.status === "GRANTED" && (
               <button className="btn-primary" disabled={busy} onClick={onRun}>
                 Run again
               </button>
             )}
           </div>
-          {delegation?.status === "GRANTED" ? (
+          {loading ? (
+            <SkeletonCard lines={5} />
+          ) : delegation?.status === "GRANTED" ? (
             <AssistantSuggestion suggestion={suggestion} />
           ) : (
             <div className="card">

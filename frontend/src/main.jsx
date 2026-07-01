@@ -7,10 +7,13 @@ import "@fontsource-variable/jetbrains-mono";
 import "@fontsource-variable/inter";
 
 import App from "./App.jsx";
+import { ToastProvider } from "./components/Toaster.jsx";
 import "./styles.css";
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <App />
+    <ToastProvider>
+      <App />
+    </ToastProvider>
   </React.StrictMode>,
 );

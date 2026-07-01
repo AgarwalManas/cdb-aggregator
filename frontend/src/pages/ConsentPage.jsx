@@ -11,14 +11,18 @@ import {
 import AuditTable from "../components/AuditTable.jsx";
 import ConnectForm from "../components/ConnectForm.jsx";
 import ConnectionCard from "../components/ConnectionCard.jsx";
+import { SkeletonCard } from "../components/Skeleton.jsx";
+import { useToast } from "../components/Toaster.jsx";
 
 // The consent + traceability dashboard (Item 9): connections, one-tap revoke,
 // granular connect, and the audit log.
 export default function ConsentPage({ scopeCatalog }) {
+  const toast = useToast();
   const [connections, setConnections] = useState([]);
   const [audit, setAudit] = useState([]);
   const [verification, setVerification] = useState(null);
   const [sources, setSources] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -40,16 +44,19 @@ export default function ConsentPage({ scopeCatalog }) {
         await refresh();
       } catch (err) {
         setError(String(err));
+      } finally {
+        setLoading(false);
       }
     })();
   }, [refresh]);
 
-  async function withBusy(fn) {
+  async function withBusy(fn, successMsg) {
     setBusy(true);
     setError(null);
     try {
       await fn();
       await refresh();
+      if (successMsg) toast(successMsg);
     } catch (err) {
       setError(String(err));
     } finally {
@@ -57,8 +64,11 @@ export default function ConsentPage({ scopeCatalog }) {
     }
   }
 
-  const onRevoke = (id) => withBusy(() => revokeConnection(id));
-  const onGrant = (body) => withBusy(() => grantConnection(body));
+  const onRevoke = (id) => withBusy(() => revokeConnection(id), "Access revoked.");
+  const onGrant = (body) => {
+    const label = sources.find((s) => s.sourceId === body.sourceId)?.sourceLabel ?? "source";
+    return withBusy(() => grantConnection(body), `Connected ${label}.`);
+  };
 
   return (
     <>
@@ -67,22 +77,32 @@ export default function ConsentPage({ scopeCatalog }) {
       <section>
         <h2>Connections</h2>
         <div className="connections-grid">
-          {connections.map((c) => (
-            <ConnectionCard
-              key={c.connectionId}
-              connection={c}
-              catalog={scopeCatalog}
-              onRevoke={onRevoke}
-              busy={busy}
-            />
-          ))}
-          {sources.length > 0 && (
-            <ConnectForm
-              sources={sources}
-              scopeCatalog={scopeCatalog}
-              onGrant={onGrant}
-              busy={busy}
-            />
+          {loading ? (
+            <>
+              <SkeletonCard lines={4} />
+              <SkeletonCard lines={4} />
+              <SkeletonCard lines={4} />
+            </>
+          ) : (
+            <>
+              {connections.map((c) => (
+                <ConnectionCard
+                  key={c.connectionId}
+                  connection={c}
+                  catalog={scopeCatalog}
+                  onRevoke={onRevoke}
+                  busy={busy}
+                />
+              ))}
+              {sources.length > 0 && (
+                <ConnectForm
+                  sources={sources}
+                  scopeCatalog={scopeCatalog}
+                  onGrant={onGrant}
+                  busy={busy}
+                />
+              )}
+            </>
           )}
         </div>
       </section>
@@ -93,7 +113,11 @@ export default function ConsentPage({ scopeCatalog }) {
           Every access to your data is recorded — allowed or denied — and tied to the consent that
           permitted it.
         </p>
-        <AuditTable events={audit} catalog={scopeCatalog} verification={verification} />
+        {loading ? (
+          <SkeletonCard lines={6} />
+        ) : (
+          <AuditTable events={audit} catalog={scopeCatalog} verification={verification} />
+        )}
       </section>
     </>
   );
