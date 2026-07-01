@@ -64,7 +64,7 @@ Frontend is **React** either way (their frontend is React/React Native).
 
 ## Phase 2 — The star: consent & traceability
 
-### [ ] Item 7 — Consent model + enforcement
+### [x] Item 7 — Consent model + enforcement
 **Produces:** the `Consent` lifecycle — granular **scopes**, **expiry**, **grant/revoke** — plus enforcement middleware so **every data read checks an active, in-scope consent** before returning anything. Tests for the enforcement path.
 **Depends on:** Items 2, 5.
 **Kickoff prompt:**
