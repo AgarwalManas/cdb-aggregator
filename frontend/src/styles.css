@@ -1,17 +1,68 @@
+/*
+ * Design foundation — "Ledger" (item-15).
+ *
+ * The product is control + evidence, so the interface reads like a well-kept
+ * ledger: near-monochrome, one accent that means "authorized / active", and
+ * character bought back through a technical mono type + tabular figures rather
+ * than through colour. Withheld / revoked is a muted *state*, never a second hue.
+ *
+ * Tokens are defined for light (default) and dark; the dark set is groundwork for
+ * the item-16 theme toggle and is inert until a data-theme="dark" is set.
+ */
+
 :root {
-  --bg: #f5f6f8;
+  /* Neutrals — light */
+  --canvas: #f7f7f4;
   --surface: #ffffff;
-  --ink: #1a1d21;
+  --surface-2: #f1f1ed;
+  --ink: #17191e;
+  --ink-soft: #3b3f47;
   --muted: #6b7280;
-  --line: #e5e7eb;
-  --brand: #0b5cff;
-  --green: #0a7c42;
-  --green-bg: #e6f4ec;
-  --red: #b4231f;
-  --red-bg: #fdecec;
-  --gray-bg: #eef0f2;
-  --radius: 12px;
-  --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.1);
+  --hairline: #e6e7ea;
+
+  /* The one accent: authorized / active */
+  --accent: #10695c;
+  --accent-strong: #0c5449;
+  --accent-tint: #e8f1ef;
+  --on-accent: #ffffff;
+
+  /* The net-worth "statement" panel — a near-black neutral, not a new hue */
+  --statement-bg: #17191e;
+  --statement-ink: #f3f3ef;
+  --statement-muted: #a6abb3;
+  --statement-line: rgba(255, 255, 255, 0.14);
+
+  /* Type — a technical mono for headings/figures/IDs/audit, a clean sans for body */
+  --font-mono:
+    "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-sans:
+    "Inter Variable", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  --radius: 10px;
+  --radius-sm: 7px;
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+}
+
+:root[data-theme="dark"] {
+  --canvas: #0e0f12;
+  --surface: #15171b;
+  --surface-2: #1b1e23;
+  --ink: #eaebe7;
+  --ink-soft: #c7c9c4;
+  --muted: #969ca5;
+  --hairline: #262a31;
+
+  --accent: #56b7a8;
+  --accent-strong: #6fc7b9;
+  --accent-tint: #12211e;
+  --on-accent: #0e0f12;
+
+  --statement-bg: #1b1e23;
+  --statement-ink: #eaebe7;
+  --statement-muted: #969ca5;
+  --statement-line: rgba(255, 255, 255, 0.12);
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -20,18 +71,35 @@
 
 body {
   margin: 0;
-  background: var(--bg);
+  background: var(--canvas);
   color: var(--ink);
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
   font-size: 15px;
-  line-height: 1.5;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Money and any figures align in columns — the ledger discipline. */
+.amount,
+.nw-total,
+.nw-split strong,
+.audit,
+.badge,
+code {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Visible keyboard focus everywhere (quality floor). */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .page {
   max-width: 1040px;
   margin: 0 auto;
-  padding: 32px 24px 64px;
+  padding: 40px 24px 64px;
 }
 
 /* Top bar */
@@ -40,73 +108,81 @@ body {
   justify-content: space-between;
   align-items: flex-start;
   gap: 24px;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 .topbar h1 {
   margin: 0;
-  font-size: 26px;
-  letter-spacing: -0.02em;
+  font-family: var(--font-mono);
+  font-size: 25px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
 }
 .subtitle {
-  margin: 4px 0 0;
+  margin: 6px 0 0;
   color: var(--muted);
+  max-width: 52ch;
 }
 .topbar-right {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
 }
 .reset-demo {
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1px solid var(--hairline);
   color: var(--muted);
   border-radius: 999px;
   padding: 9px 16px;
-  box-shadow: var(--shadow);
+  font-size: 13px;
 }
 .reset-demo:hover:not(:disabled) {
-  border-color: var(--brand);
-  color: var(--brand);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 .who {
   display: flex;
   align-items: center;
   gap: 12px;
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1px solid var(--hairline);
   border-radius: 999px;
-  padding: 8px 16px 8px 8px;
-  box-shadow: var(--shadow);
+  padding: 7px 16px 7px 7px;
 }
 .who strong {
   display: block;
+  font-size: 14px;
 }
 .who .muted {
-  font-size: 13px;
+  font-size: 12.5px;
 }
 .avatar {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: var(--brand);
-  color: #fff;
+  background: var(--ink);
+  color: var(--canvas);
   display: grid;
   place-items: center;
+  font-family: var(--font-mono);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 section {
-  margin-top: 32px;
+  margin-top: 34px;
 }
 section h2 {
-  font-size: 18px;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   margin: 0 0 4px;
 }
 .section-note {
   margin: 0 0 16px;
   color: var(--muted);
-  max-width: 620px;
+  max-width: 64ch;
 }
 
 /* Cards + connections */
@@ -118,7 +194,7 @@ section h2 {
 }
 .card {
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 18px;
@@ -129,7 +205,7 @@ section h2 {
 }
 .connection.expired,
 .connection.revoked {
-  opacity: 0.72;
+  opacity: 0.66;
 }
 .card-head {
   display: flex;
@@ -139,7 +215,9 @@ section h2 {
 }
 .card-head h3 {
   margin: 0;
-  font-size: 16px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
 }
 .expiry {
   margin: 6px 0 14px;
@@ -152,71 +230,76 @@ section h2 {
   gap: 6px;
   min-height: 26px;
 }
-.accounts {
-  margin: 14px 0 16px;
-  color: var(--muted);
-  font-size: 13px;
-}
 
-/* Chips + badges */
+/* Chips + badges — neutral by default; the accent means "authorized". */
 .chip {
-  background: #eef2ff;
-  color: #3538cd;
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  border: 1px solid var(--hairline);
   border-radius: 999px;
-  padding: 3px 10px;
-  font-size: 12px;
-  font-weight: 500;
+  padding: 2px 9px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
   white-space: nowrap;
 }
 .badge {
   border-radius: 999px;
   padding: 3px 10px;
+  font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 .status-granted {
-  background: var(--green-bg);
-  color: var(--green);
+  background: var(--accent-tint);
+  color: var(--accent);
 }
-.status-revoked {
-  background: var(--red-bg);
-  color: var(--red);
-}
+.status-revoked,
 .status-expired,
 .status-pending {
-  background: var(--gray-bg);
+  background: var(--surface-2);
   color: var(--muted);
+}
+.status-revoked {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
 }
 
 /* Buttons */
 button {
   font: inherit;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
   padding: 9px 14px;
   font-weight: 600;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 button:disabled {
   cursor: default;
-  opacity: 0.55;
-}
-.btn-revoke {
-  margin-top: auto;
-  background: #fff;
-  border-color: var(--red);
-  color: var(--red);
-}
-.btn-revoke:not(:disabled):hover {
-  background: var(--red-bg);
+  opacity: 0.5;
 }
 .btn-primary {
-  background: var(--brand);
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
 }
 .btn-primary:not(:disabled):hover {
-  filter: brightness(0.95);
+  background: var(--accent-strong);
+}
+/* Revoke is deliberately quiet — a neutral control, not a red alarm. */
+.btn-revoke {
+  margin-top: auto;
+  background: var(--surface);
+  border-color: var(--hairline);
+  color: var(--ink-soft);
+}
+.btn-revoke:not(:disabled):hover {
+  border-color: var(--ink);
+  background: var(--surface-2);
 }
 
 /* Connect form */
@@ -228,7 +311,8 @@ button:disabled {
 }
 .connect-form h3 {
   margin: 0;
-  font-size: 16px;
+  font-family: var(--font-mono);
+  font-size: 15px;
 }
 .connect-form label {
   display: flex;
@@ -242,13 +326,14 @@ button:disabled {
 .connect-form input[type="number"] {
   font: inherit;
   padding: 8px 10px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
   color: var(--ink);
 }
 .scope-picker {
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
   padding: 10px 12px;
   margin: 0;
 }
@@ -271,57 +356,71 @@ button:disabled {
   width: 16px;
   height: 16px;
   margin: 0;
+  accent-color: var(--accent);
 }
 
-/* Audit table */
+/* Audit table — the traceability ledger; mono throughout for a record feel. */
 .audit {
   width: 100%;
   border-collapse: collapse;
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius);
   overflow: hidden;
   box-shadow: var(--shadow);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
 }
 .audit th,
 .audit td {
   text-align: left;
   padding: 11px 14px;
-  border-bottom: 1px solid var(--line);
-  font-size: 13.5px;
+  border-bottom: 1px solid var(--hairline);
   vertical-align: middle;
 }
 .audit thead th {
-  background: #fafbfc;
-  font-size: 12px;
+  background: var(--surface-2);
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--muted);
+  font-weight: 600;
 }
 .audit tbody tr:last-child td {
   border-bottom: none;
 }
+/* A denied read is marked by a muted, inset row — a state, not a red flag. */
 .audit tr.denied {
-  background: #fffafa;
+  background: var(--surface-2);
+  color: var(--muted);
 }
 .audit code {
-  background: var(--gray-bg);
+  background: var(--surface-2);
   padding: 1px 6px;
-  border-radius: 6px;
-  font-size: 12.5px;
+  border-radius: 5px;
+  font-size: 12px;
 }
 .muted {
   color: var(--muted);
 }
+/* Withheld: the gate working for you — shown as a dimmed, dashed placeholder. */
 .withheld {
-  color: var(--red);
+  color: var(--muted);
+  border-bottom: 1px dashed currentColor;
+  padding-bottom: 1px;
+}
+/* The delegated agent's reads carry the accent — access under an active grant. */
+.by-agent {
+  color: var(--accent);
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 /* Tabs */
 .tabs {
   display: flex;
   gap: 4px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--hairline);
   margin-bottom: 8px;
 }
 .tabs button {
@@ -330,52 +429,59 @@ button:disabled {
   border-bottom: 2px solid transparent;
   border-radius: 0;
   padding: 10px 4px;
-  margin-right: 20px;
+  margin-right: 22px;
   color: var(--muted);
   font-weight: 600;
 }
+.tabs button:hover {
+  color: var(--ink);
+}
 .tabs button.active {
   color: var(--ink);
-  border-bottom-color: var(--brand);
+  border-bottom-color: var(--accent);
 }
 
-/* Net worth hero */
+/* Net-worth "statement" — a calm near-black panel; the total leads in mono. */
 .networth {
-  background: linear-gradient(135deg, #0b5cff 0%, #3538cd 100%);
-  color: #fff;
+  background: var(--statement-bg);
+  color: var(--statement-ink);
   border: none;
 }
 .nw-head .muted {
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--statement-muted);
 }
 .nw-total {
-  margin: 4px 0 0;
+  margin: 6px 0 0;
+  font-family: var(--font-mono);
   font-size: 40px;
+  font-weight: 600;
   letter-spacing: -0.03em;
 }
 .nw-split {
   display: flex;
   gap: 40px;
-  margin-top: 18px;
+  margin-top: 20px;
 }
 .nw-split .muted {
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--statement-muted);
   display: block;
   font-size: 13px;
 }
 .nw-split strong {
-  font-size: 20px;
+  font-family: var(--font-mono);
+  font-size: 19px;
+  font-weight: 600;
 }
 .nw-split .pos,
 .nw-split .neg {
-  color: #fff;
+  color: var(--statement-ink);
 }
 .nw-excluded {
-  margin: 18px 0 0;
+  margin: 20px 0 0;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
-  border-top: 1px solid rgba(255, 255, 255, 0.25);
-  padding-top: 12px;
+  color: var(--statement-muted);
+  border-top: 1px solid var(--statement-line);
+  padding-top: 14px;
 }
 
 /* Overview layout */
@@ -405,9 +511,10 @@ button:disabled {
   padding: 8px 18px;
 }
 .source-name {
-  font-size: 13px;
+  font-family: var(--font-mono);
+  font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--muted);
   margin: 10px 0 4px;
 }
@@ -418,7 +525,7 @@ button:disabled {
   align-items: center;
   gap: 12px;
   padding: 12px 0;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--hairline);
 }
 .source-group .account-row:first-of-type {
   border-top: none;
@@ -430,15 +537,16 @@ button:disabled {
   margin-top: 2px;
 }
 .amount {
-  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
   font-weight: 600;
   white-space: nowrap;
 }
+/* Sign carries the meaning, not colour: liabilities/outflows simply recede. */
 .pos {
-  color: var(--green);
+  color: var(--ink);
 }
 .neg {
-  color: var(--red);
+  color: var(--muted);
 }
 
 /* Transaction feed */
@@ -492,26 +600,25 @@ button:disabled {
   font-size: 16px;
   line-height: 1.6;
 }
+/* The suggestion is the agent acting under an active delegation — accent context. */
 .advisory {
   margin: 14px 0 0;
-  padding: 10px 12px;
-  background: var(--green-bg);
-  color: var(--green);
-  border-radius: 8px;
+  padding: 10px 14px;
+  background: var(--accent-tint);
+  color: var(--accent);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 600;
 }
-.by-agent {
-  color: #6d28d9;
-  font-weight: 600;
-  white-space: nowrap;
-}
 
+/* An error stands out by contrast and weight, not by a new colour. */
 .error {
-  background: var(--red-bg);
-  color: var(--red);
-  border: 1px solid #f3c4c2;
-  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--ink);
+  border: 1px solid var(--hairline);
+  border-left: 3px solid var(--ink);
+  border-radius: var(--radius-sm);
   padding: 10px 14px;
   margin-bottom: 16px;
 }
@@ -523,4 +630,33 @@ button:disabled {
   color: var(--muted);
   font-size: 13px;
   text-align: center;
+}
+
+/* Responsive: stack the top bar on narrow screens (down to ~375px). */
+@media (max-width: 560px) {
+  .page {
+    padding: 28px 16px 56px;
+  }
+  .topbar {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .topbar-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .nw-total {
+    font-size: 34px;
+  }
+  .nw-split {
+    gap: 28px;
+  }
+}
+
+/* Honour reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
 }
