@@ -72,7 +72,7 @@ empty states invite action. A "Revoke" button produces a "Revoked" confirmation.
 
 ## Track 1 — UI refinement
 
-### [ ] item-15 — Design foundation: identity + token system  ★ do first
+### [x] item-15 — Design foundation: identity + token system  ★ do first
 **Produces:** the token system from the brief implemented as CSS variables / theme
 (color light+dark, type scale, spacing, radius, motion), the display/body/mono faces
 wired in, and the app shell (nav, layout, the three tabs) restyled to it. No feature
@@ -87,7 +87,7 @@ changes — this is the language everything else is written in.
 > token system + theme and restyle the app shell and the three tabs to it. No
 > API/feature changes. Keep CI green. Commit `Item 15 — design foundation and token system`, tag `item-15`, push.
 
-### [ ] item-16 — Dark mode
+### [x] item-16 — Dark mode
 **Produces:** a light/dark toggle that defaults to system preference, persists the
 choice, and animates the switch under `prefers-reduced-motion` guards. Uses the dark
 tokens from item-15 (no new colors invented here).
@@ -97,7 +97,7 @@ tokens from item-15 (no new colors invented here).
 > theme toggle: default to system preference, persist the user's choice, respect
 > prefers-reduced-motion. Verify contrast holds in both themes. Commit `Item 16 — dark mode`, tag `item-16`, push.
 
-### [ ] item-17 — Traceability log: filter, sort, search
+### [x] item-17 — Traceability log: filter, sort, search
 **Produces:** the audit-log view upgraded to real controls — filter by **actor**
 (aggregator vs delegated agent), by **decision** (allowed / denied), and by **scope**;
 **per-column sort** (ascending/descending) on time and actor; and free-text **search**.
@@ -112,7 +112,7 @@ from item-22 exists, surface a "chain verified ✓ / broken" badge here.
 > a chain-verification endpoint exists, show a verified/broken badge. Commit
 > `Item 17 — audit log filter, sort, search`, tag `item-17`, push.
 
-### [ ] item-18 — States & feedback
+### [x] item-18 — States & feedback
 **Produces:** loading skeletons, empty states, and error states across the three tabs,
 plus action feedback — a toast on grant/revoke, and a confirm step on revoke. All copy
 in the interface's voice (active, specific, no apologies).
@@ -123,7 +123,7 @@ in the interface's voice (active, specific, no apologies).
 > Consent / Assistant. Add a confirm step and a "Revoked" toast on revoke, and a toast
 > on new grants. Match the design foundation. Commit `Item 18 — loading, empty, error, and action states`, tag `item-18`, push.
 
-### [ ] item-19 — Overview data viz + minimization made visible  ★ the signature
+### [x] item-19 — Overview data viz + minimization made visible  ★ the signature
 **Produces:** the Overview's net-worth composition as a clear visualization, and the
 signature element from the brief: withheld/excluded fields render as explicit
 `withheld` states (with reason), and excluded balances show as excluded in net worth —
@@ -137,7 +137,7 @@ the gate working *for* the user, made visible.
 > the foundation. Commit `Item 19 — net-worth viz and visible minimization`,
 > tag `item-19`, push.
 
-### [ ] item-20 — "Old way vs new way" screen-scraping visual
+### [x] item-20 — "Old way vs new way" screen-scraping visual
 **Produces:** a visual contrast (in-app or a dedicated view) dramatizing
 credential-based screen-scraping vs token-based FDX access — pulling from the existing
 scraper source and docs/screen-scraping.md.
@@ -147,7 +147,7 @@ scraper source and docs/screen-scraping.md.
 > credential screen-scraping vs token-based FDX access, drawing on the scraper provider
 > and docs/screen-scraping.md. Match the design foundation. Commit `Item 20 — screen-scraping vs FDX visual`, tag `item-20`, push.
 
-### [ ] item-21 — Accessibility & responsive pass
+### [x] item-21 — Accessibility & responsive pass
 **Produces:** a cross-cutting sweep — keyboard navigation and visible focus on every
 interactive element, AA contrast verified in both themes, aria labels on the log
 controls and charts, layout correct down to ~375px, reduced-motion honored.
@@ -163,7 +163,7 @@ controls and charts, layout correct down to ~375px, reduced-motion honored.
 
 ## Track 2 — Technical hardening
 
-### [ ] item-22 — Tamper-evident (hash-chained) audit log  ★ high value
+### [x] item-22 — Tamper-evident (hash-chained) audit log  ★ high value
 **Produces:** each audit entry stores the hash of the prior entry, so any alteration or
 deletion breaks the chain. A `verify_chain()` exposed via an endpoint and asserted in
 tests (happy path + a deliberately corrupted chain). Pairs with item-17's verified
@@ -178,7 +178,7 @@ entry was changed after the fact.
 > it, and test the happy path and a corrupted chain. Keep 100% coverage. Commit
 > `Item 22 — tamper-evident hash-chained audit log`, tag `item-22`, push.
 
-### [ ] item-23 — FAPI-profile OAuth2 on the mock provider
+### [x] item-23 — FAPI-profile OAuth2 on the mock provider
 **Produces:** the mock FDX bank's OAuth2 flow upgraded toward the **FAPI** security
 profile FDX specifies — PKCE, pushed authorization requests (PAR), and/or
 sender-constrained tokens — with the adapter updated to match, and docs stating which
@@ -195,7 +195,7 @@ properly rather than with a toy token flow.
 > coverage. Commit `Item 23 — FAPI-profile OAuth2 on mock provider`, tag `item-23`,
 > push.
 
-### [ ] item-24 — Property-based tests on the consent decision
+### [x] item-24 — Property-based tests on the consent decision
 **Produces:** Hypothesis-style generative tests over the consent gate and the
 normalizer, asserting the invariants **"a read is never allowed without an active,
 in-scope grant"** and **"minimization never leaks an ungranted field,"** across
@@ -209,7 +209,7 @@ generative testing hardens it against edge cases that example-based unit tests m
 > read without an active in-scope grant, and no ungranted field ever appears in output.
 > Keep coverage at 100%. Commit `Item 24 — property-based tests on consent + minimization`, tag `item-24`, push.
 
-### [ ] item-25 — SQLite persistence behind the store seam
+### [x] item-25 — SQLite persistence behind the store seam
 **Produces:** one concrete store (SQLite) implemented against the existing in-memory
 store interface, selectable by config and defaulting to in-memory, with the audit log
 prioritized for durability. ADR 0006 updated; tests cover both backends.
@@ -223,7 +223,7 @@ trail durable across restarts — which matters for a log whose value is that it
 > backends; 100% coverage. Commit `Item 25 — SQLite persistence behind store seam`,
 > tag `item-25`, push.
 
-### [ ] item-26 — THREAT_MODEL.md
+### [x] item-26 — THREAT_MODEL.md
 **Produces:** a concise threat-model document — trust boundaries, token and consent
 handling, audit-log integrity, and what a production accreditation path would require.
 Linked from the README's security area.
@@ -237,7 +237,7 @@ software responsibly, and records the reasoning behind the design.
 > "what real FDX accreditation would require" section. Link it from the README security
 > area. Commit `Item 26 — threat model`, tag `item-26`, push.
 
-### [ ] item-27 — FDX schema conformance validation
+### [x] item-27 — FDX schema conformance validation
 **Produces:** the mock providers' responses and the canonical model's serialization
 validated against the **published FDX JSON schemas** for the entities modeled
 (accounts, balances, transactions, investment holdings, customer), with a conformance
