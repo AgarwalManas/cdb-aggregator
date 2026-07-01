@@ -8,8 +8,8 @@ import ComparePage from "./pages/ComparePage.jsx";
 import ConsentPage from "./pages/ConsentPage.jsx";
 import CredentialsPage from "./pages/CredentialsPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
+import HowItWorksPage from "./pages/HowItWorksPage.jsx";
 import OverviewPage from "./pages/OverviewPage.jsx";
-import PrinciplesPage from "./pages/PrinciplesPage.jsx";
 import WhySaferPage from "./pages/WhySaferPage.jsx";
 
 // Each page: its sidebar group, nav label, and the header title/subtitle.
@@ -50,23 +50,23 @@ const PAGES = {
     title: "Credentials & proofs",
     subtitle: "Prove a fact, hold it in a wallet, present it to a verifier — a simulation.",
   },
-  compare: {
-    group: "how",
-    label: "Old vs New",
-    title: "Old way vs new way",
-    subtitle: "Why token-based FDX access beats credential-based screen-scraping.",
+  howitworks: {
+    group: "trust",
+    label: "How it works",
+    title: "How it works",
+    subtitle: "CDB Aggregator puts you in control of your data, every step of the way.",
   },
   safer: {
-    group: "how",
+    group: "trust",
     label: "Why this is safer",
     title: "Why this is safer",
-    subtitle: "The case for scoped, revocable, token-based access.",
+    subtitle: "Designed around privacy, transparency, and your control — not convenience.",
   },
-  principles: {
-    group: "how",
-    label: "Consent principles",
-    title: "Consent principles",
-    subtitle: "The ideas the whole app is built on.",
+  compare: {
+    group: "trust",
+    label: "Old vs New",
+    title: "Old vs New",
+    subtitle: "A better way to share data — privacy-first, consent-driven, always in your control.",
   },
 };
 
@@ -74,7 +74,7 @@ const PAGES = {
 const GROUPS = [
   { key: "main", heading: null, items: ["dashboard", "accounts", "control", "assistant"] },
   { key: "explore", heading: "Explore (Demo)", items: ["address", "credentials"] },
-  { key: "how", heading: "How it works", items: ["compare", "safer", "principles"] },
+  { key: "trust", heading: "Trust & Privacy", items: ["howitworks", "safer", "compare"] },
 ];
 
 export default function App() {
@@ -135,9 +135,9 @@ export default function App() {
           {page === "assistant" && <AgentPage scopeCatalog={scopeCatalog} />}
           {page === "address" && <AddressPage />}
           {page === "credentials" && <CredentialsPage />}
-          {page === "compare" && <ComparePage />}
+          {page === "howitworks" && <HowItWorksPage onNavigate={setPage} />}
           {page === "safer" && <WhySaferPage onNavigate={setPage} />}
-          {page === "principles" && <PrinciplesPage onNavigate={setPage} />}
+          {page === "compare" && <ComparePage />}
 
           <footer className="foot">
             cdb-aggregator · FDX-aligned consent &amp; traceability demo
