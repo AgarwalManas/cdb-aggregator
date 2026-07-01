@@ -48,7 +48,7 @@ Frontend is **React** either way (their frontend is React/React Native).
 **Kickoff prompt:**
 > Wealthsimple project, **Item 4 — second mock bank with a messy schema**. Pull the to-do list, canonical model, and Item 3 from this project's history. Build a second mock source whose schema deliberately differs from FDX so the normalizer has something hard to map.
 
-### [ ] Item 5 — Normalizer / adapter layer
+### [x] Item 5 — Normalizer / adapter layer
 **Produces:** an adapter per source that maps raw source data → the canonical FDX model, behind a common interface, with **per-adapter tests** (Wealthsimple values automated tests, so this item carries weight).
 **Depends on:** Items 2, 3, 4.
 **Kickoff prompt:**
