@@ -3,10 +3,9 @@
 Context and planning for the build. These travel with the repo so the work is
 self-contained and any coding session (or reviewer) has the full picture.
 
-- **build-todo.md** — the build roadmap: how the project was assembled, in
-  dependency order, each Item landing as a tagged commit (`item-01` … `item-14`).
-- **polish-todo.md** — the follow-on roadmap: a UI-refinement pass and a set of
-  technical-hardening items (`item-15` onward), same tag convention.
+- **roadmap.md** — the full build timeline: how the project was assembled, in
+  dependency order, each Item landing as a tagged commit (`item-01` … `item-33`) —
+  the core build plus the UI-refinement, hardening, and consent-frontier follow-on.
 - **research-report.md** — the regulatory and standards context behind the design
   (CDBA, FDX, the screen-scraping problem), with references.
 - **adr/** — architecture decision records: the *why* behind the key structural

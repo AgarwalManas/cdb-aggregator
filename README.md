@@ -194,8 +194,7 @@ cdb-aggregator/
 │   ├── THREAT_MODEL.md         # trust boundaries, STRIDE, audit integrity
 │   ├── fdx-conformance.md      # schema-validated FDX entities/fields
 │   ├── project-review.md       # walkthrough script
-│   ├── build-todo.md           # build roadmap (item-01 … item-14)
-│   ├── polish-todo.md          # follow-on roadmap (item-15 … item-33)
+│   ├── roadmap.md              # the full build timeline (item-01 … item-33)
 │   └── research-report.md      # regulatory & standards context
 ├── Dockerfile                  # one image: build the UI, serve it + the API
 ├── render.yaml                 # Render blueprint — one-click, auto-deploying URL
@@ -316,7 +315,7 @@ auditable consent, that reasoning is part of the build.
 
 ## Build timeline
 
-Built in **Items** (see [`docs/build-todo.md`](docs/build-todo.md)), in
+Built in **Items** (see [`docs/roadmap.md`](docs/roadmap.md)), in
 dependency order, each tagged so the history is a navigable timeline:
 
 | Phase | Items | What lands |
@@ -328,8 +327,8 @@ dependency order, each tagged so the history is a navigable timeline:
 | **4 — Differentiator** | 11 | Agentic delegation / intent layer |
 | **5 — Packaging** | 12–14 | Test hardening + CI; README + ADRs + explainer; project-review walkthrough |
 
-A follow-on roadmap continues the timeline (see
-[`docs/polish-todo.md`](docs/polish-todo.md)), same one-item-per-tag cadence:
+A follow-on continues the same one-item-per-tag cadence (all in
+[`docs/roadmap.md`](docs/roadmap.md)):
 
 | Track | Items | What lands |
 |------:|-------|-----------|
