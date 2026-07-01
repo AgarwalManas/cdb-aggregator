@@ -20,31 +20,38 @@ order, each landing as a tagged commit so history stays a navigable timeline.
 **Done:** items 15–27 — the full UI refinement track (design system, dark mode, log
 controls, states, minimization signature, screen-scraping visual, accessibility) and
 the full hardening track (hash-chained audit log, FAPI, property-based tests, SQLite
-persistence, threat model, FDX schema conformance).
+persistence, threat model, FDX schema conformance). Plus the sanity checkpoint (which
+caught and fixed the SQLite-across-the-threadpool bug) and **all of Track 3** —
+items 28–33: agent activity & authority console, portable alias + consent-gated
+resolver, user-verifiable audit log, access receipts + permission simulation, and the
+two clearly-labelled simulations (selective-disclosure attestation, VC wallet).
 
-**Next:** the sanity checkpoint below, then **item-28 onward** (Track 3).
+**Next:** the roadmap is complete. Every item landed as a tagged commit (`item-28` …
+`item-33`) with CI green.
 
-### SC — Sanity checkpoint (do this FIRST, before item-28)
+### SC — Sanity checkpoint (done, before item-28)
 
 Thirteen items of change — including SQLite persistence (item-25) and the hash chain
 (item-22), both of which touch the audit path — is exactly the kind of run where
 something drifts. Confirm the project is green and deployable before adding more. This is
 a gate, not a build item (no tag); commit any fixes as normal (`fix: …`).
 
-- [ ] **CI green on `main`.** The latest `ci.yml` run passes: ruff lint + format, backend
+- [x] **CI green on `main`.** The latest `ci.yml` run passes: ruff lint + format, backend
   tests, the 100% coverage gate, and the frontend build.
-- [ ] **Tests pass locally** at full coverage: `pytest --cov=app --cov-fail-under=100`.
-- [ ] **Lint/format clean:** `ruff check .` and `ruff format --check .`.
-- [ ] **Frontend builds:** `cd frontend && npm install && npm run build`.
-- [ ] **One-service boot works:** build the UI and serve it from FastAPI; confirm the app
+- [x] **Tests pass locally** at full coverage: `pytest --cov=app --cov-fail-under=100`.
+- [x] **Lint/format clean:** `ruff check .` and `ruff format --check .`.
+- [x] **Frontend builds:** `cd frontend && npm install && npm run build`.
+- [x] **One-service boot works:** build the UI and serve it from FastAPI; confirm the app
   serves the UI, the API under `/api`, and `/docs` on one port.
-- [ ] **Audit path intact end-to-end** after SQLite + hash chain: grant a consent → do a
+- [x] **Audit path intact end-to-end** after SQLite + hash chain: grant a consent → do a
   read → revoke → confirm the audit entries are written, the hash chain still verifies,
   and data survives a restart (SQLite durability).
-- [ ] **Live demo deploys** and the public URL serves current `main` (allow for the free
+- [x] **Live demo deploys** and the public URL serves current `main` (allow for the free
   tier's cold-start).
-- [ ] **Tags present:** `git tag` shows `item-15` … `item-27`, each pushed.
-- [ ] **Fix anything red before proceeding.** Do not start item-28 with a failing gate.
+- [x] **Tags present:** `git tag` shows `item-15` … `item-27`, each pushed.
+- [x] **Fix anything red before proceeding.** The checkpoint caught the SQLite thread-safety
+  bug (sync handlers run across the ASGI threadpool); fixed in `fix: make SqliteAuditLog
+  safe across the server's threadpool` before item-28.
 
 **Kickoff prompt:**
 > cdb-aggregator, **sanity checkpoint before item-28 — do not build a feature**. Verify
@@ -58,15 +65,15 @@ a gate, not a build item (no tag); commit any fixes as normal (`fix: …`).
 > and `git tag` shows `item-15` … `item-27`. Report anything red and fix it with a `fix:`
 > commit before we start item-28.
 
-### Remaining order (after SC)
+### Order built (after SC) — all done
 
-1. **item-28 — agent activity & authority console** (Track 3 standout; builds on Item 11).
-2. **item-31 — portable alias + consent-gated resolver** (Track 3 standout; the
+1. ✅ **item-28 — agent activity & authority console** (Track 3 standout; builds on Item 11).
+2. ✅ **item-31 — portable alias + consent-gated resolver** (the
    route-on-a-lookup / portable-address feature).
-3. **item-30 — user-verifiable audit log** (cheap now — item-22's hash chain exists).
-4. **item-29 — access receipts + permission simulation** (pairs with item-17).
-5. **item-32, item-33 — simulated selective-disclosure + VC wallet** (optional; keep
-   clearly labelled as simulations).
+3. ✅ **item-30 — user-verifiable audit log** (built on item-22's hash chain).
+4. ✅ **item-29 — access receipts + permission simulation** (pairs with item-17).
+5. ✅ **item-32, item-33 — simulated selective-disclosure + VC wallet** (clearly labelled
+   as simulations, in code and in-product).
 
 ### Housekeeping (independent of the above)
 
@@ -327,7 +334,7 @@ certification. (Two smaller touches from the same research — consent expiry/re
 countdowns and a small source→adapter→gate→screen data-flow animation — are best folded
 into item-18 and item-19 rather than built as separate items.)
 
-### [ ] item-28 — Agent activity & authority console
+### [x] item-28 — Agent activity & authority console
 **Produces:** a live view of the delegated agent acting under a scoped grant — a
 real-time action feed (each row: intent, the field/account read, the grant that
 authorized it, timestamp, status); an **authority card** (agent identity, scope held,
@@ -350,7 +357,7 @@ delegation, data minimization, downstream accountability, traceability).
 > backend coverage, CI green.
 > Commit `Item 28 — agent activity and authority console`, tag `item-28`, push.
 
-### [ ] item-29 — Access receipts + permission simulation
+### [x] item-29 — Access receipts + permission simulation
 **Produces:** (a) an **access receipt** for every read — who accessed, what field/cluster,
 the authorizing grant, purpose, timestamp, what was disclosed vs withheld, and a short
 "why this was accessed" line — as a scrollable receipt history with a per-receipt detail
@@ -370,7 +377,7 @@ minimization.
 > vs withheld against the mock data. Match the design foundation; keep coverage at 100%.
 > Commit `Item 29 — access receipts and permission simulation`, tag `item-29`, push.
 
-### [ ] item-30 — User-verifiable audit log (in-browser)
+### [x] item-30 — User-verifiable audit log (in-browser)
 **Produces:** on top of item-22's hash chain, a published **chain head** (latest hash)
 and a **"Verify integrity"** control in the traceability view that recomputes the chain
 in-browser (Web Crypto) and reports intact / tampered, plus a "download log + proof"
@@ -388,7 +395,7 @@ can verify themselves* — the visible payoff of item-22.
 > tampered fixture. Keep coverage at 100%.
 > Commit `Item 30 — user-verifiable audit log`, tag `item-30`, push.
 
-### [ ] item-31 — Portable account alias + consent-gated resolver
+### [x] item-31 — Portable account alias + consent-gated resolver
 **Produces:** a bank-neutral **alias** the user owns (e.g. `name.cdb`) plus a **resolver**
 mapping it to current account coordinates, with four properties: (1) resolution is
 **consent-gated** — a lookup returns nothing without an active, in-scope grant; (2) the
@@ -419,7 +426,7 @@ rail — the same honest-scope line the rest of the project draws.
 
 ### Staged (simulated — label clearly; graduate only with real integrations)
 
-### [ ] item-32 — Selective-disclosure attestation (simulated)
+### [x] item-32 — Selective-disclosure attestation (simulated)
 **Produces:** a "prove without sharing" flow that issues a signed attestation of a
 derived fact (e.g. a threshold check such as *balance stayed non-negative for 90 days*)
 without exposing the underlying transactions — computed server-side from mock data and
@@ -439,7 +446,7 @@ demonstration of the pattern, not a real zero-knowledge proof. Graduate to real 
 > document what a real implementation would require. Keep coverage at 100%.
 > Commit `Item 32 — simulated selective-disclosure attestation`, tag `item-32`, push.
 
-### [ ] item-33 — Verifiable-credential wallet view (simulated)
+### [x] item-33 — Verifiable-credential wallet view (simulated)
 **Produces:** a holder-style wallet view where issuer-signed attestations derived from
 the user's (mock) financial data can be selectively presented to a verifier — a simulated
 wallet, clearly labelled.
