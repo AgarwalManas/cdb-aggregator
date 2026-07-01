@@ -109,7 +109,7 @@ Frontend is **React** either way (their frontend is React/React Native).
 
 ## Phase 5 — Packaging (this is what gets you the interview)
 
-### [ ] Item 12 — Test hardening + CI
+### [x] Item 12 — Test hardening + CI
 **Produces:** broadened automated test coverage across adapters, consent enforcement, and data minimization, plus a **GitHub Actions** CI workflow that runs them. Demonstrates the "ship daily with automated tests" engineering culture.
 **Depends on:** Items 5, 7, 8 (more coverage = better).
 **Kickoff prompt:**

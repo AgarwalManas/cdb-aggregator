@@ -1,13 +1,17 @@
 # Consumer-Driven Banking Aggregator
 
+[![CI](https://github.com/AgarwalManas/cdb-aggregator/actions/workflows/ci.yml/badge.svg)](https://github.com/AgarwalManas/cdb-aggregator/actions/workflows/ci.yml)
+
 An **FDX-aligned account aggregator** for Canada's Consumer-Driven Banking era,
 built around a **first-class consent and traceability layer** — the part that
 separates an accredited open-banking participant from a credential-storing
 screen scraper.
 
-> **Status:** scaffold (Item 1 of a phased build). Runnable skeleton with a
-> health check; the canonical model, mock providers, normalizer, and the consent
-> layer land in subsequent phases (see [Roadmap](#roadmap)).
+> **Status:** phased build in progress. The canonical model, three mock
+> providers (FDX / messy / screen-scraped), the normalizer, the consent +
+> traceability engine, both React dashboards, and an agentic-delegation layer are
+> in; CI runs lint + tests (≈98% coverage) + the frontend build on every push.
+> See [Roadmap](#roadmap). A full rewrite lands in Item 13.
 
 ---
 
