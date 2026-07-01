@@ -10,12 +10,15 @@ Two FDX principles, exercised through the enforcing reader:
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 import pytest
 
 from app.adapters.base import SourceAdapter
 from app.consent import (
+    GENESIS_HASH,
+    AuditEvent,
     AuditLog,
     ConsentDenied,
     ConsentEnforcingReader,
@@ -193,3 +196,65 @@ def test_audit_is_append_only_and_queryable_by_consent() -> None:
     # No API to remove or mutate — append is the only mutation.
     assert not hasattr(audit, "delete")
     assert not hasattr(audit, "clear")
+
+
+# --- Tamper-evident hash chain (item-22) -------------------------------------
+
+
+def _event(i: int) -> AuditEvent:
+    return AuditEvent(
+        occurred_at=T0 + i * DAY,
+        action=f"read_{i}",
+        customer_id=CUSTOMER,
+        recipient=RECIPIENT,
+        scope=ConsentScope.BALANCES,
+        allowed=True,
+        record_count=1,
+    )
+
+
+def _chained_log(n: int = 4) -> AuditLog:
+    log = AuditLog()
+    for i in range(n):
+        log.record(_event(i))
+    return log
+
+
+def test_head_is_genesis_when_empty() -> None:
+    assert AuditLog().head() == GENESIS_HASH
+
+
+def test_each_entry_links_to_the_previous_hash() -> None:
+    log = _chained_log(3)
+    entries = log.chain()
+    assert entries[0].prev_hash == GENESIS_HASH
+    assert entries[1].prev_hash == entries[0].entry_hash
+    assert entries[2].prev_hash == entries[1].entry_hash
+    assert log.head() == entries[-1].entry_hash
+
+
+def test_verify_passes_for_an_intact_chain() -> None:
+    result = _chained_log(4).verify()
+    assert result.valid is True
+    assert result.checked == 4
+    assert result.broken_at is None
+
+
+def test_verify_detects_an_edited_entry() -> None:
+    log = _chained_log(4)
+    # Simulate editing a stored record's content without re-hashing it.
+    edited = replace(log._entries[2].event, record_count=999)
+    log._entries[2] = replace(log._entries[2], event=edited)
+
+    result = log.verify()
+    assert result.valid is False
+    assert result.broken_at == 2  # the altered entry no longer matches its hash
+
+
+def test_verify_detects_a_deleted_entry() -> None:
+    log = _chained_log(4)
+    del log._entries[1]  # removing a middle entry breaks the linkage after the gap
+
+    result = log.verify()
+    assert result.valid is False
+    assert result.broken_at == 1  # the next entry's prev_hash no longer lines up

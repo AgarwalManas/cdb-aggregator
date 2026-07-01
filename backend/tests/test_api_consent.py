@@ -77,3 +77,16 @@ def test_audit_log_has_allowed_and_denied(client: TestClient) -> None:
     assert denied and denied[0]["reason"] == "ACCOUNT_NOT_COVERED"
     # Minimization is visible in the trail (record_count / withheld present).
     assert all("recordCount" in e and "withheld" in e for e in events)
+
+
+def test_audit_chain_verifies(client: TestClient) -> None:
+    # The seeded trail is a valid hash chain, and a fresh read appends to it intact.
+    result = client.get("/api/audit/verify").json()
+    assert result["valid"] is True
+    assert result["checked"] >= 5
+    assert result["brokenAt"] is None
+
+    client.get("/api/net-worth")  # more reads -> more audit entries
+    after = client.get("/api/audit/verify").json()
+    assert after["valid"] is True
+    assert after["checked"] > result["checked"]

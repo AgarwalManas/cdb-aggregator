@@ -19,7 +19,7 @@ Maps to FDX's five principles: Control, Access, Transparency, Traceability, Secu
 
 from __future__ import annotations
 
-from .audit import AuditEvent, AuditLog
+from .audit import GENESIS_HASH, AuditEvent, AuditLog, ChainedEntry, ChainVerification
 from .enforcement import (
     ConsentDecision,
     ConsentDenied,
@@ -39,6 +39,9 @@ __all__ = [
     "ConsentEnforcingReader",
     "AuditLog",
     "AuditEvent",
+    "ChainedEntry",
+    "ChainVerification",
+    "GENESIS_HASH",
     "minimize_customer",
     "minimize_account",
 ]

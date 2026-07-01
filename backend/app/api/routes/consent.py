@@ -16,6 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from app.api.demo import SOURCES, AggregatorState, Connection
 from app.api.dto import (
     AuditEventView,
+    ChainVerificationView,
     ConnectionView,
     GrantRequest,
     ScopeInfo,
@@ -126,3 +127,12 @@ def list_audit(state: StateDep) -> list[AuditEventView]:
         )
         for e in events
     ]
+
+
+@router.get("/audit/verify", summary="Verify the audit log's tamper-evident hash chain")
+def verify_audit(state: StateDep) -> ChainVerificationView:
+    """Re-walk the hash chain and report whether the trail is intact."""
+    result = state.audit.verify()
+    return ChainVerificationView(
+        valid=result.valid, checked=result.checked, broken_at=result.broken_at
+    )

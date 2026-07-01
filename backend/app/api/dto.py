@@ -75,6 +75,14 @@ class AuditEventView(ApiModel):
     withheld: list[str]
 
 
+class ChainVerificationView(ApiModel):
+    """Result of verifying the audit log's tamper-evident hash chain (item-22)."""
+
+    valid: bool
+    checked: int  # number of entries walked
+    broken_at: int | None = None  # index of the first broken entry, if any
+
+
 def scope_catalog() -> list[ScopeInfo]:
     return [
         ScopeInfo(scope=scope, label=label, description=desc)
