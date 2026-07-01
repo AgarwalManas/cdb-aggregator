@@ -193,7 +193,7 @@ cdb-aggregator/
 │   ├── screen-scraping.md      # "why screen-scraping is about to break"
 │   ├── THREAT_MODEL.md         # trust boundaries, STRIDE, audit integrity
 │   ├── fdx-conformance.md      # schema-validated FDX entities/fields
-│   ├── project-review.md       # walkthrough script
+│   ├── project-review.md       # a prose project tour
 │   ├── roadmap.md              # the full build timeline (item-01 … item-33)
 │   └── research-report.md      # regulatory & standards context
 ├── Dockerfile                  # one image: build the UI, serve it + the API
@@ -325,7 +325,7 @@ dependency order, each tagged so the history is a navigable timeline:
 | **2 — Consent ★** | 7–9 | Consent lifecycle + enforcement; audit + minimization; consent dashboard |
 | **3 — Aggregation UX** | 10 | Unified accounts + household net-worth dashboard |
 | **4 — Differentiator** | 11 | Agentic delegation / intent layer |
-| **5 — Packaging** | 12–14 | Test hardening + CI; README + ADRs + explainer; project-review walkthrough |
+| **5 — Packaging** | 12–14 | Test hardening + CI; README + ADRs + explainer; project tour |
 
 A follow-on continues the same one-item-per-tag cadence (all in
 [`docs/roadmap.md`](docs/roadmap.md)):
