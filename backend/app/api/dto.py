@@ -268,3 +268,66 @@ class ApprovalView(ApiModel):
 class ApprovalDecisionRequest(ApiModel):
     decision: str  # APPROVE / REJECT / REQUEST_CHANGES
     note: str | None = None
+
+
+# --- Portable alias + consent-gated resolver (item-31) -----------------------
+
+
+class AliasTargetView(ApiModel):
+    """A routing target the alias points at (or could) — masked, never raw."""
+
+    account_id: str
+    source_label: str
+    display: str  # e.g. "Legacy Bank ···· 4821"
+
+
+class AliasResolutionRow(ApiModel):
+    """One line of the resolution history: who resolved, and what they were told."""
+
+    occurred_at: datetime
+    requester: str
+    allowed: bool
+    disclosed: str  # "one-time routing token" | "nothing"
+    reason: str | None
+
+
+class AliasView(ApiModel):
+    """The portable-address card: current target, where it can point, its history."""
+
+    handle: str
+    target: AliasTargetView
+    created_at: datetime
+    repointed_at: datetime | None
+    options: list[AliasTargetView]  # connected accounts the alias can re-point to
+    history: list[AliasResolutionRow]
+
+
+class ResolveRequest(ApiModel):
+    requester: str = "counterparty:acme-payments"
+
+
+class ResolutionView(ApiModel):
+    """What a counterparty gets back from a resolution — a token, or a reason."""
+
+    allowed: bool
+    handle: str
+    routing_token: str | None
+    disclosed: str
+    reason: str | None
+
+
+class ExchangeRequest(ApiModel):
+    token: str
+
+
+class RoutingCoordinatesView(ApiModel):
+    """Coordinates revealed once, on redeeming a token — the settlement step."""
+
+    institution: str
+    transit: str
+    masked_account: str
+    source_label: str
+
+
+class RepointRequest(ApiModel):
+    account_id: str

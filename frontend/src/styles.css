@@ -997,6 +997,88 @@ button:disabled {
   }
 }
 
+/* Portable address (item-31) */
+.address-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.address-card .handle {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--accent);
+}
+.repoint {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.repoint-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.repoint-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.repoint-options button {
+  flex: 1;
+  min-width: 130px;
+}
+.repoint-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  text-align: left;
+}
+.repoint-bank {
+  font-weight: 600;
+}
+.repoint-acct {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.75;
+}
+.resolve-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.resolve-section h2 {
+  margin: 0;
+}
+.resolution {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.resolution.denied-card {
+  opacity: 0.82;
+}
+.token {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  word-break: break-all;
+  background: var(--surface-2);
+  border: 1px dashed var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  color: var(--ink);
+}
+.coords {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline);
+}
+
 /* An error stands out by contrast and weight, not by a new colour. */
 .error {
   background: var(--surface-2);

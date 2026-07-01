@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { getScopes, resetDemo } from "./api.js";
 import ThemeToggle from "./components/ThemeToggle.jsx";
+import AddressPage from "./pages/AddressPage.jsx";
 import AgentPage from "./pages/AgentPage.jsx";
 import ComparePage from "./pages/ComparePage.jsx";
 import ConsentPage from "./pages/ConsentPage.jsx";
@@ -24,6 +25,10 @@ const TABS = {
     title: "Old way vs new way",
     subtitle: "Why token-based FDX access beats credential-based screen-scraping.",
   },
+  address: {
+    title: "Portable address",
+    subtitle: "A bank-neutral handle you own — resolved to a one-time token, never your account.",
+  },
 };
 
 // Tab order and the (shorter) labels shown in the nav.
@@ -32,6 +37,7 @@ const NAV = [
   ["consent", "Consent & Traceability"],
   ["assistant", "Assistant"],
   ["compare", "Old vs New"],
+  ["address", "Portable address"],
 ];
 
 export default function App() {
@@ -99,6 +105,7 @@ export default function App() {
       {tab === "consent" && <ConsentPage scopeCatalog={scopeCatalog} />}
       {tab === "assistant" && <AgentPage scopeCatalog={scopeCatalog} />}
       {tab === "compare" && <ComparePage />}
+      {tab === "address" && <AddressPage />}
 
       <footer className="foot">cdb-aggregator · FDX-aligned consent &amp; traceability demo</footer>
     </div>

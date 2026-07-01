@@ -57,5 +57,26 @@ export const grantConnection = (body) =>
     body: JSON.stringify(body),
   });
 
+// Portable alias + consent-gated resolver (item-31)
+export const getAlias = () => request("/alias");
+export const resolveAlias = (body) =>
+  request("/alias/resolve", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body || {}),
+  });
+export const exchangeToken = (token) =>
+  request("/alias/exchange", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+export const repointAlias = (accountId) =>
+  request("/alias/repoint", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ accountId }),
+  });
+
 // Reset this visitor's demo world back to its seeded state (Item: deploy demo).
 export const resetDemo = () => request("/demo/reset", { method: "POST" });

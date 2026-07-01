@@ -23,6 +23,7 @@ from datetime import UTC, datetime, timedelta
 
 from app.adapters.base import SourceAdapter
 from app.agent import AGENT_ID, REQUIRED_SCOPES, CashSuggestion, run_cash_finder
+from app.alias import AliasRegistry, AliasResolver
 from app.consent import (
     AuditLog,
     ConsentDenied,
@@ -51,6 +52,8 @@ from app.models import (
 
 CUSTOMER_ID = "cust-001"
 RECIPIENT = "cdb-aggregator"
+#: The customer's portable, bank-neutral alias (item-31).
+ALIAS_HANDLE = "ada.cdb"
 
 SOURCES: dict[str, str] = {
     "mock_fdx_bank": "Mock FDX Bank",
@@ -106,6 +109,8 @@ class AggregatorState:
     agent_delegation_id: str | None = None
     agent_paused: bool = False
     approvals: list[Approval] = field(default_factory=list)
+    aliases: AliasRegistry = field(default_factory=AliasRegistry)
+    resolver: AliasResolver | None = field(default=None, repr=False)
     _seq: int = field(default=0, repr=False)
     _approval_seq: int = field(default=0, repr=False)
 
@@ -373,7 +378,25 @@ def build_demo_state(now: datetime | None = None) -> AggregatorState:
 
     _seed_audit_trail(state, now)
     _seed_agent_delegation(state, now)
+    _seed_alias(state, now)
     return state
+
+
+def _seed_alias(state: AggregatorState, now: datetime) -> None:
+    """Register the customer's portable alias and open its card with one resolution."""
+    state.resolver = AliasResolver(
+        state.aliases,
+        ConsentGate(state.store),
+        state.audit,
+        customer_id=state.customer_id,
+        recipient=state.recipient,
+        source_label=lambda aid: (
+            c.source_label if (c := state.connection_for_account(aid)) else None
+        ),
+    )
+    state.aliases.register(ALIAS_HANDLE, "leg-sav", at=now)
+    # A single honest resolution so the trail (and the address card) opens with history.
+    state.resolver.resolve(ALIAS_HANDLE, requester="counterparty:acme-payments", at=now)
 
 
 def _seed_agent_delegation(state: AggregatorState, now: datetime) -> None:
