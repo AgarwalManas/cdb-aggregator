@@ -17,7 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.api.demo import build_demo_state
-from app.api.routes import consent, health
+from app.api.routes import aggregation, consent, health
 from app.core.config import get_settings
 
 
@@ -46,9 +46,9 @@ def create_app() -> FastAPI:
     # deployment builds this from a database + the connected sources instead.
     app.state.aggregator = build_demo_state()
 
-    # Routers. Phase 3 will add accounts / transactions here.
     app.include_router(health.router)
-    app.include_router(consent.router)
+    app.include_router(consent.router)  # Item 9: consent dashboard API
+    app.include_router(aggregation.router)  # Item 10: unified accounts / net worth
 
     @app.get("/", tags=["meta"], summary="Service root")
     def root() -> dict[str, str]:

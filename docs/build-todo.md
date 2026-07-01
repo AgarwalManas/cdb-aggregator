@@ -86,7 +86,7 @@ Frontend is **React** either way (their frontend is React/React Native).
 
 ## Phase 3 — Aggregation UX
 
-### [ ] Item 10 — Unified accounts + net-worth dashboard (React)
+### [x] Item 10 — Unified accounts + net-worth dashboard (React)
 **Produces:** the main client view — merged accounts list, merged transaction feed, and a **household net-worth view** echoing "Wealthsimple Households." All reads flow through the consent gate from Phase 2.
 **Depends on:** Items 5, 7, 9.
 **Kickoff prompt:**

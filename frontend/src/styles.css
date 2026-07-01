@@ -300,6 +300,139 @@ button:disabled {
   color: var(--red);
 }
 
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 8px;
+}
+.tabs button {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 10px 4px;
+  margin-right: 20px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.tabs button.active {
+  color: var(--ink);
+  border-bottom-color: var(--brand);
+}
+
+/* Net worth hero */
+.networth {
+  background: linear-gradient(135deg, #0b5cff 0%, #3538cd 100%);
+  color: #fff;
+  border: none;
+}
+.nw-head .muted {
+  color: rgba(255, 255, 255, 0.75);
+}
+.nw-total {
+  margin: 4px 0 0;
+  font-size: 40px;
+  letter-spacing: -0.03em;
+}
+.nw-split {
+  display: flex;
+  gap: 40px;
+  margin-top: 18px;
+}
+.nw-split .muted {
+  color: rgba(255, 255, 255, 0.75);
+  display: block;
+  font-size: 13px;
+}
+.nw-split strong {
+  font-size: 20px;
+}
+.nw-split .pos,
+.nw-split .neg {
+  color: #fff;
+}
+.nw-excluded {
+  margin: 18px 0 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  padding-top: 12px;
+}
+
+/* Overview layout */
+.overview-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+@media (max-width: 760px) {
+  .overview-cols {
+    grid-template-columns: 1fr;
+  }
+}
+.gate-note {
+  margin-top: 28px;
+  max-width: none;
+}
+
+/* Accounts */
+.accounts {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 12px;
+}
+.source-group {
+  padding: 8px 18px;
+}
+.source-name {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin: 10px 0 4px;
+}
+.account-row,
+.txn-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.source-group .account-row:first-of-type {
+  border-top: none;
+}
+.account-sub,
+.txn-sub {
+  display: block;
+  font-size: 12.5px;
+  margin-top: 2px;
+}
+.amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pos {
+  color: var(--green);
+}
+.neg {
+  color: var(--red);
+}
+
+/* Transaction feed */
+.feed {
+  margin-top: 12px;
+  padding: 4px 18px;
+}
+.txn-row:first-child {
+  border-top: none;
+}
+
 .error {
   background: var(--red-bg);
   color: var(--red);

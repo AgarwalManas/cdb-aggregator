@@ -1,15 +1,19 @@
-"""Demo state for the consent dashboard (Item 9).
+"""Demo state for the dashboards (Items 9-10).
 
 The aggregator has no database yet, so ``build_demo_state`` stands up an
-in-memory world the dashboard can show and act on: a customer with three
-*connections* (one per mock source), and a real audit trail produced by running
-a handful of reads through the Item 7/8 enforcing reader — including one that is
-denied, so the traceability view has something honest to display.
+in-memory world the dashboards read and act on:
 
-A "connection" is the aggregator's own concept: a data source the customer has
-authorized, paired with the ``Consent`` that governs it. Each connection is
-scoped to that source's account ids, so the gate enforces per-source access even
-though every grant is to the same recipient (this aggregator).
+* a customer with **three connections** (one per mock source), each scoped to
+  that source's accounts;
+* an **aggregated set of accounts** across those sources — chequing + TFSA + a
+  credit card at the FDX bank, savings at the legacy bank, and a mortgage at the
+  scraped bank — spanning assets and liabilities so net worth is interesting;
+* a real audit trail from running reads through the Item 7/8 enforcing reader,
+  including one **denied** read.
+
+Note the scraped connection is granted ``ACCOUNT_DETAILS`` + ``TRANSACTIONS`` but
+**not** ``BALANCES`` — so the mortgage balance is withheld and drops out of net
+worth, demonstrating that consent, not just connectivity, decides what you see.
 """
 
 from __future__ import annotations
@@ -30,6 +34,7 @@ from app.models import (
     AccountCategory,
     AccountType,
     Balance,
+    BalanceType,
     ConsentScope,
     Customer,
     DebitCreditMemo,
@@ -43,7 +48,6 @@ from app.models import (
 CUSTOMER_ID = "cust-001"
 RECIPIENT = "cdb-aggregator"
 
-# Known sources the customer can connect (mock providers from Items 3, 4, 6).
 SOURCES: dict[str, str] = {
     "mock_fdx_bank": "Mock FDX Bank",
     "legacy_bank": "Legacy Bank",
@@ -62,11 +66,12 @@ class Connection:
 
 @dataclass
 class AggregatorState:
-    """Everything the consent API operates on."""
+    """Everything the dashboards operate on."""
 
     store: ConsentStore
     audit: AuditLog
     connections: list[Connection]
+    adapter: SourceAdapter
     customer_id: str = CUSTOMER_ID
     recipient: str = RECIPIENT
     _seq: int = field(default=0, repr=False)
@@ -75,8 +80,16 @@ class AggregatorState:
         self._seq += 1
         return f"con-{self._seq}"
 
+    def reader(self) -> ConsentEnforcingReader:
+        """A consent-enforcing reader over the aggregated source + audit log."""
+        return ConsentEnforcingReader(self.adapter, ConsentGate(self.store), self.audit)
 
-# --- A compact aggregated view for seeding the audit trail --------------------
+    def connection_for_account(self, account_id: str) -> Connection | None:
+        for connection in self.connections:
+            consent = self.store.get(connection.connection_id)
+            if consent is not None and account_id in consent.account_ids:
+                return connection
+        return None
 
 
 def _demo_customer() -> Customer:
@@ -92,33 +105,130 @@ def _demo_customer() -> Customer:
     )
 
 
-def _demo_accounts(now: datetime) -> list[Account]:
-    def acct(account_id, category, atype, current) -> Account:
-        return Account(
-            account_id=account_id,
-            customer_id=CUSTOMER_ID,
-            category=category,
-            account_type=atype,
-            currency="CAD",
-            balances=[Balance(as_of=now, currency="CAD", current=current)],
-        )
+def _account(account_id, category, atype, current, balance_type, now) -> Account:
+    return Account(
+        account_id=account_id,
+        customer_id=CUSTOMER_ID,
+        category=category,
+        account_type=atype,
+        currency="CAD",
+        nickname={
+            "fdx-chq": "Everyday Chequing",
+            "fdx-tfsa": "Self-Directed TFSA",
+            "fdx-visa": "Rewards Visa",
+            "leg-sav": "Rainy Day Savings",
+            "old-mortgage": "Home Mortgage",
+        }.get(account_id),
+        balances=[Balance(as_of=now, currency="CAD", current=current, balance_type=balance_type)],
+    )
 
+
+def _demo_accounts(now: datetime) -> list[Account]:
+    A, L = BalanceType.ASSET, BalanceType.LIABILITY
+    DEP, INV, LOAN = (
+        AccountCategory.DEPOSIT_ACCOUNT,
+        AccountCategory.INVESTMENT_ACCOUNT,
+        AccountCategory.LOAN_ACCOUNT,
+    )
     return [
-        acct("acc-chq-001", AccountCategory.DEPOSIT_ACCOUNT, AccountType.CHECKING, "4210.55"),
-        acct("acc-inv-001", AccountCategory.INVESTMENT_ACCOUNT, AccountType.TFSA, "11193.50"),
-        acct("GB-CHQ-9981", AccountCategory.DEPOSIT_ACCOUNT, AccountType.CHECKING, "4210.55"),
-        acct("****1234", AccountCategory.DEPOSIT_ACCOUNT, AccountType.CHECKING, "4210.55"),
+        _account("fdx-chq", DEP, AccountType.CHECKING, "4210.55", A, now),
+        _account("fdx-tfsa", INV, AccountType.TFSA, "11193.50", A, now),
+        _account("fdx-visa", LOAN, AccountType.CREDIT_CARD, "1875.40", L, now),
+        _account("leg-sav", DEP, AccountType.SAVINGS, "15800.00", A, now),
+        _account("old-mortgage", LOAN, AccountType.MORTGAGE, "312000.00", L, now),
     ]
 
 
+def _txn(txn_id, account_id, amount, memo, desc, category, when) -> Transaction:
+    return Transaction(
+        transaction_id=txn_id,
+        account_id=account_id,
+        amount=amount,
+        currency="CAD",
+        debit_credit_memo=memo,
+        status=TransactionStatus.POSTED,
+        transaction_timestamp=when,
+        posted_timestamp=when,
+        description=desc,
+        category=category,
+    )
+
+
 class _DemoAdapter(SourceAdapter):
-    """A stand-in aggregated source, only used to seed a realistic audit trail."""
+    """The aggregated canonical source the dashboards read (via the gate)."""
 
     source_name = "demo"
 
     def __init__(self, now: datetime) -> None:
         self._now = now
         self._accounts = _demo_accounts(now)
+        D, C = DebitCreditMemo.DEBIT, DebitCreditMemo.CREDIT
+        self._txns: dict[str, list[Transaction]] = {
+            "fdx-chq": [
+                _txn(
+                    "fdx-chq-1",
+                    "fdx-chq",
+                    "2400.00",
+                    C,
+                    "PAYROLL DEPOSIT",
+                    "Income",
+                    now - timedelta(days=1),
+                ),
+                _txn(
+                    "fdx-chq-2",
+                    "fdx-chq",
+                    "85.20",
+                    D,
+                    "LOBLAWS #1234",
+                    "Groceries",
+                    now - timedelta(days=2),
+                ),
+            ],
+            "fdx-tfsa": [
+                _txn(
+                    "fdx-tfsa-1",
+                    "fdx-tfsa",
+                    "1000.00",
+                    C,
+                    "TFSA CONTRIBUTION",
+                    "Transfer",
+                    now - timedelta(days=5),
+                ),
+            ],
+            "fdx-visa": [
+                _txn(
+                    "fdx-visa-1",
+                    "fdx-visa",
+                    "42.99",
+                    D,
+                    "UBER EATS",
+                    "Restaurants",
+                    now - timedelta(hours=6),
+                ),
+            ],
+            "leg-sav": [
+                _txn(
+                    "leg-sav-1",
+                    "leg-sav",
+                    "12.33",
+                    C,
+                    "INTEREST",
+                    "Interest",
+                    now - timedelta(days=1),
+                ),
+            ],
+            "old-mortgage": [
+                _txn(
+                    "old-mortgage-1",
+                    "old-mortgage",
+                    "1800.00",
+                    D,
+                    "MORTGAGE PAYMENT",
+                    "Housing",
+                    now - timedelta(days=3),
+                ),
+            ],
+        }
 
     def get_customer(self) -> Customer:
         return _demo_customer()
@@ -127,31 +237,18 @@ class _DemoAdapter(SourceAdapter):
         return self._accounts
 
     def get_transactions(self, account_id: str) -> list[Transaction]:
-        if account_id in ("acc-chq-001", "GB-CHQ-9981"):
-            return [
-                Transaction(
-                    transaction_id=f"{account_id}-t1",
-                    account_id=account_id,
-                    amount="85.20",
-                    currency="CAD",
-                    debit_credit_memo=DebitCreditMemo.DEBIT,
-                    status=TransactionStatus.POSTED,
-                    transaction_timestamp=self._now,
-                    posted_timestamp=self._now,
-                    description="LOBLAWS #1234",
-                )
-            ]
-        return []
+        return self._txns.get(account_id, [])
 
     def get_holdings(self, account_id: str) -> list[InvestmentHolding]:
-        if account_id == "acc-inv-001":
+        if account_id == "fdx-tfsa":
             return [
                 InvestmentHolding(
-                    holding_id="h-1",
+                    holding_id="fdx-tfsa-vfv",
                     account_id=account_id,
                     holding_type="ETF",
                     symbol="VFV",
                     quantity="50",
+                    current_unit_price="110.25",
                     market_value="5512.50",
                     currency="CAD",
                     as_of=self._now,
@@ -166,6 +263,9 @@ def build_demo_state(now: datetime | None = None) -> AggregatorState:
     store = ConsentStore()
     audit = AuditLog()
     connections: list[Connection] = []
+    state = AggregatorState(
+        store=store, audit=audit, connections=connections, adapter=_DemoAdapter(now)
+    )
 
     seeds = [
         (
@@ -178,23 +278,23 @@ def build_demo_state(now: datetime | None = None) -> AggregatorState:
                 ConsentScope.CUSTOMER_IDENTITY,
                 ConsentScope.CUSTOMER_CONTACT,
             },
-            ["acc-chq-001", "acc-inv-001"],
+            ["fdx-chq", "fdx-tfsa", "fdx-visa"],
             90,
         ),
         (
             "legacy_bank",
             {ConsentScope.ACCOUNT_DETAILS, ConsentScope.BALANCES, ConsentScope.TRANSACTIONS},
-            ["GB-CHQ-9981"],
+            ["leg-sav"],
             60,
         ),
+        # No BALANCES: the mortgage balance is withheld, so it drops out of net worth.
         (
             "scraper_bank",
             {ConsentScope.ACCOUNT_DETAILS, ConsentScope.TRANSACTIONS},
-            ["****1234"],
+            ["old-mortgage"],
             5,
         ),
     ]
-    state = AggregatorState(store=store, audit=audit, connections=connections)
     for source_id, scopes, account_ids, days in seeds:
         connection_id = state.next_connection_id()
         store.grant(
@@ -208,21 +308,21 @@ def build_demo_state(now: datetime | None = None) -> AggregatorState:
         )
         connections.append(Connection(connection_id, source_id, SOURCES[source_id]))
 
-    _seed_audit_trail(store, audit, now)
+    _seed_audit_trail(state, now)
     return state
 
 
-def _seed_audit_trail(store: ConsentStore, audit: AuditLog, now: datetime) -> None:
-    """Run real reads through the enforcing reader to populate the audit log."""
-    reader = ConsentEnforcingReader(_DemoAdapter(now), ConsentGate(store), audit=audit)
+def _seed_audit_trail(state: AggregatorState, now: datetime) -> None:
+    """A few real reads so the traceability log opens with honest history."""
+    reader = state.reader()
     reader.read_accounts(CUSTOMER_ID, RECIPIENT, at=now)
     reader.read_customer(CUSTOMER_ID, RECIPIENT, at=now)
-    reader.read_transactions(CUSTOMER_ID, RECIPIENT, "acc-chq-001", at=now)
-    reader.read_balances(CUSTOMER_ID, RECIPIENT, "GB-CHQ-9981", at=now)
-    reader.read_holdings(CUSTOMER_ID, RECIPIENT, "acc-inv-001", at=now)
-    # Denied: holdings on a legacy account — no active grant both covers that
-    # account and includes the investments scope.
+    reader.read_transactions(CUSTOMER_ID, RECIPIENT, "fdx-chq", at=now)
+    reader.read_balances(CUSTOMER_ID, RECIPIENT, "leg-sav", at=now)
+    reader.read_holdings(CUSTOMER_ID, RECIPIENT, "fdx-tfsa", at=now)
+    # Denied: holdings on the savings account — no active grant both covers it
+    # and includes the investments scope.
     try:
-        reader.read_holdings(CUSTOMER_ID, RECIPIENT, "GB-CHQ-9981", at=now)
+        reader.read_holdings(CUSTOMER_ID, RECIPIENT, "leg-sav", at=now)
     except ConsentDenied:
         pass

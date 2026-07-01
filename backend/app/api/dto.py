@@ -8,6 +8,7 @@ while staying pythonic in code.
 from __future__ import annotations
 
 from datetime import datetime
+from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
@@ -78,3 +79,62 @@ def scope_catalog() -> list[ScopeInfo]:
         ScopeInfo(scope=scope, label=label, description=desc)
         for scope, (label, desc) in SCOPE_CATALOG.items()
     ]
+
+
+# --- Aggregation views (Item 10) ---------------------------------------------
+
+
+class AccountView(ApiModel):
+    """A merged account, tagged with the source it came from."""
+
+    account_id: str
+    source_id: str
+    source_label: str
+    category: str
+    account_type: str
+    currency: str
+    nickname: str | None
+    masked_number: str | None
+    balance_shared: bool  # False when BALANCES wasn't granted (minimized away)
+    current: Decimal | None
+    balance_type: str | None
+
+
+class TransactionView(ApiModel):
+    """One row in the merged transaction feed."""
+
+    transaction_id: str
+    account_id: str
+    source_label: str
+    amount: Decimal
+    currency: str
+    direction: str  # DEBIT / CREDIT
+    description: str | None
+    category: str | None
+    occurred_at: datetime
+    status: str
+
+
+class NetWorthLine(ApiModel):
+    account_id: str
+    source_label: str
+    balance_type: str
+    current: Decimal
+
+
+class ExcludedAccount(ApiModel):
+    account_id: str
+    source_label: str
+    reason: str
+
+
+class NetWorthView(ApiModel):
+    """Household net worth, computed only from balances the customer shared."""
+
+    currency: str
+    assets: Decimal
+    liabilities: Decimal
+    net_worth: Decimal
+    member_name: str
+    included: list[NetWorthLine]
+    excluded: list[ExcludedAccount]

@@ -17,6 +17,11 @@ export const getSources = () => request("/sources");
 export const getConnections = () => request("/connections");
 export const getAudit = () => request("/audit");
 
+// Aggregation (Item 10)
+export const getAccounts = () => request("/accounts");
+export const getTransactions = () => request("/transactions");
+export const getNetWorth = () => request("/net-worth");
+
 export const revokeConnection = (connectionId) =>
   request(`/connections/${connectionId}/revoke`, { method: "POST" });
 

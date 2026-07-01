@@ -1,5 +1,12 @@
 // Small presentation helpers shared across components.
 
+export function formatMoney(value, currency = "CAD") {
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency,
+  }).format(Number(value));
+}
+
 export function formatDateTime(iso) {
   return new Date(iso).toLocaleString(undefined, {
     year: "numeric",

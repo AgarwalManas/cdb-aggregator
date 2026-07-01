@@ -81,6 +81,23 @@ class ConsentEnforcingReader:
         self._log("read_accounts", customer_id, recipient, decision, at, len(accounts), withheld)
         return accounts
 
+    def read_account(
+        self, customer_id: str, recipient: str, account_id: str, *, at: datetime | None = None
+    ) -> Account:
+        """A single account, gated on ``ACCOUNT_DETAILS`` + coverage of that account.
+
+        The account-scoped counterpart of :meth:`read_accounts`; aggregation
+        (Item 10) uses it so each source's accounts are checked individually.
+        """
+        decision = self._authorize(
+            "read_account", customer_id, recipient, ConsentScope.ACCOUNT_DETAILS, account_id, at
+        )
+        account, withheld = minimize_account(
+            self._find_account(account_id), decision.consent.scopes
+        )
+        self._log("read_account", customer_id, recipient, decision, at, 1, withheld)
+        return account
+
     def read_balances(
         self, customer_id: str, recipient: str, account_id: str, *, at: datetime | None = None
     ) -> list[Balance]:

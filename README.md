@@ -156,10 +156,13 @@ The scraper adapter (`app.adapters.scraper_bank`) parses its HTML into the same
 canonical model; the structured contrast is in `app.comparison`. See
 `backend/app/providers/scraper_bank/README.md`.
 
-### Run the consent dashboard (Item 9)
+### Run the dashboard (Items 9-10)
 
-The React consent + traceability UI. With the API running (step 3 above), start
-the client in another terminal:
+The React client — two tabs: an **Overview** (household net worth, merged
+accounts, merged transaction feed) and **Consent & Traceability** (connections,
+scopes, expiry, one-tap revoke, audit log). Every figure is read through the
+consent gate. With the API running (step 3 above), start the client in another
+terminal:
 
 ```bash
 cd frontend
@@ -167,9 +170,7 @@ npm install
 npm run dev        # http://localhost:5173  (proxies /api to the backend)
 ```
 
-List connections, see each one's scopes + expiry, one-tap revoke, connect a
-source with only the scopes you choose, and read the traceability log. See
-`frontend/README.md`.
+See `frontend/README.md`.
 
 ### Run the tests
 
