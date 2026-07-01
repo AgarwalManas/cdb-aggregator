@@ -26,6 +26,14 @@ const TABS = {
   },
 };
 
+// Tab order and the (shorter) labels shown in the nav.
+const NAV = [
+  ["overview", "Overview"],
+  ["consent", "Consent & Traceability"],
+  ["assistant", "Assistant"],
+  ["compare", "Old vs New"],
+];
+
 export default function App() {
   const [tab, setTab] = useState("overview");
   const [scopeCatalog, setScopeCatalog] = useState({});
@@ -74,19 +82,17 @@ export default function App() {
         </div>
       </header>
 
-      <nav className="tabs">
-        <button className={tab === "overview" ? "active" : ""} onClick={() => setTab("overview")}>
-          Overview
-        </button>
-        <button className={tab === "consent" ? "active" : ""} onClick={() => setTab("consent")}>
-          Consent &amp; Traceability
-        </button>
-        <button className={tab === "assistant" ? "active" : ""} onClick={() => setTab("assistant")}>
-          Assistant
-        </button>
-        <button className={tab === "compare" ? "active" : ""} onClick={() => setTab("compare")}>
-          Old vs New
-        </button>
+      <nav className="tabs" aria-label="Views">
+        {NAV.map(([key, label]) => (
+          <button
+            key={key}
+            className={tab === key ? "active" : ""}
+            aria-current={tab === key ? "page" : undefined}
+            onClick={() => setTab(key)}
+          >
+            {label}
+          </button>
+        ))}
       </nav>
 
       {tab === "overview" && <OverviewPage />}

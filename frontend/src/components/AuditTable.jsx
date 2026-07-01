@@ -134,8 +134,9 @@ export default function AuditTable({ events, catalog, verification }) {
           to see all {events.length}.
         </p>
       ) : (
-        <table className="audit">
-          <thead>
+        <div className="audit-scroll">
+          <table className="audit">
+            <thead>
             <tr>
               <SortHeader
                 label="When"
@@ -190,7 +191,8 @@ export default function AuditTable({ events, catalog, verification }) {
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
       )}
     </div>
   );

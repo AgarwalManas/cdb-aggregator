@@ -459,6 +459,16 @@ button:disabled {
   white-space: nowrap;
 }
 
+/* Keep the wide audit table usable on small screens — scroll it, don't crush it. */
+.audit-scroll {
+  overflow-x: auto;
+}
+@media (max-width: 640px) {
+  .audit {
+    min-width: 640px;
+  }
+}
+
 /* Traceability log controls (item-17) */
 .log-bar {
   display: flex;
@@ -538,6 +548,11 @@ button:disabled {
   gap: 4px;
   border-bottom: 1px solid var(--hairline);
   margin-bottom: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 .tabs button {
   background: none;
@@ -548,6 +563,8 @@ button:disabled {
   margin-right: 22px;
   color: var(--muted);
   font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .tabs button:hover {
   color: var(--ink);
