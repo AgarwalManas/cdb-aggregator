@@ -121,7 +121,7 @@ Frontend is **React** either way (their frontend is React/React Native).
 **Kickoff prompt:**
 > Wealthsimple project, **Item 13 — README + ADRs + screen-scraping writeup**. Pull the to-do list, research report, and project structure from this project's history. Write the polished README, a few ADRs, and the screen-scraping-vs-FDX explainer.
 
-### [ ] Item 14 — "Project Review" walkthrough + post draft
+### [x] Item 14 — "Project Review" walkthrough + post draft
 **Produces:** a tight script for the **30-minute Project Review** (an actual stage in Wealthsimple's engineering interview) — problem, architecture, the consent layer, trade-offs, what you'd do for real accreditation — plus a short LinkedIn/blog post draft to share the project publicly.
 **Depends on:** Item 13.
 **Kickoff prompt:**

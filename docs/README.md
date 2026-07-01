@@ -12,6 +12,9 @@ self-contained and any coding session (or reviewer) has the full picture.
   choices, one file per decision.
 - **screen-scraping.md** — "why screen-scraping is about to break": the argument
   for building FDX-first, with the old-way/new-way contrast.
+- **project-review.md** — a 30-minute project-review walkthrough script (problem,
+  architecture, the consent layer, trade-offs, path to accreditation, Q&A).
+- **blog-post.md** — LinkedIn + blog drafts for sharing the project publicly.
 
 > These are planning artifacts, not claims of live regulatory integration. See
 > the root README for scope.
