@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cdb:fdx/transaction",
+  "title": "FDX Transaction (hand-authored subset)",
+  "description": "FDX's unsigned 'amount' + 'debitCreditMemo' direction convention; a pending transaction carries no postedTimestamp. See docs/fdx-conformance.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "transactionId",
+    "accountId",
+    "amount",
+    "debitCreditMemo",
+    "status",
+    "transactionTimestamp"
+  ],
+  "properties": {
+    "transactionId": { "type": "string" },
+    "accountId": { "type": "string" },
+    "amount": { "type": "number", "minimum": 0 },
+    "debitCreditMemo": { "enum": ["DEBIT", "CREDIT"] },
+    "status": { "enum": ["POSTED", "PENDING"] },
+    "transactionTimestamp": { "type": "string" },
+    "postedTimestamp": { "type": "string" },
+    "description": { "type": "string" },
+    "category": { "type": "string" }
+  }
+}

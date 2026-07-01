@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cdb:fdx/account",
+  "title": "FDX Account (hand-authored subset, incl. balance fields)",
+  "description": "Covers both the account summary (no holdings) and the account detail (with holdings). Balance is carried as fields on the account, per FDX. See docs/fdx-conformance.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["accountId", "accountCategory", "accountType", "currency"],
+  "properties": {
+    "accountId": { "type": "string" },
+    "customerId": { "type": "string" },
+    "accountCategory": {
+      "enum": ["DEPOSIT_ACCOUNT", "INVESTMENT_ACCOUNT", "LOAN_ACCOUNT", "CREDIT_ACCOUNT"]
+    },
+    "accountType": { "type": "string" },
+    "nickname": { "type": "string" },
+    "status": { "type": "string" },
+    "currency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currencyCode"],
+      "properties": { "currencyCode": { "type": "string" } }
+    },
+    "maskedAccountNumber": { "type": "string" },
+    "balanceType": { "enum": ["ASSET", "LIABILITY"] },
+    "currentBalance": { "type": "number" },
+    "availableBalance": { "type": "number" },
+    "balanceAsOf": { "type": "string" },
+    "holdings": { "type": "array", "items": { "type": "object" } }
+  }
+}

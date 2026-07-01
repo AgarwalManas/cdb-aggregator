@@ -222,6 +222,10 @@ pytest --cov=app --cov-report=term-missing           # with coverage
 - **100% line coverage**, enforced in CI (`--cov-fail-under=100`).
 - **Warnings are errors** — nothing slips through silently in a financial
   codebase.
+- **Property-based tests** (Hypothesis) assert the consent invariants across
+  thousands of random inputs; **FDX schema conformance** validates the mock
+  provider's responses so drift fails the build (see
+  [docs/fdx-conformance.md](docs/fdx-conformance.md)).
 - **[GitHub Actions](.github/workflows/ci.yml)** runs ruff (lint + format),
   the tests + coverage gate, and the frontend build on every push and PR.
 

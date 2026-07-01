@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cdb:fdx/customer",
+  "title": "FDX Customer (hand-authored subset)",
+  "description": "The FDX-shaped customer as emitted by the mock provider. See docs/fdx-conformance.md for scope and caveats.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["customerId", "name"],
+  "properties": {
+    "customerId": { "type": "string" },
+    "name": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["first", "last"],
+      "properties": {
+        "first": { "type": "string" },
+        "last": { "type": "string" }
+      }
+    },
+    "email": { "type": "string" },
+    "addresses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["line1", "city", "postalCode", "country"],
+        "properties": {
+          "line1": { "type": "string" },
+          "city": { "type": "string" },
+          "region": { "type": "string" },
+          "postalCode": { "type": "string" },
+          "country": { "type": "string" }
+        }
+      }
+    }
+  }
+}

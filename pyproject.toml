@@ -20,6 +20,7 @@ dev = [
     "pytest-cov>=5.0",      # coverage reporting (CI gate)
     "ruff>=0.4",            # lint + format
     "hypothesis>=6.100",    # property-based tests over the consent gate (item-24)
+    "jsonschema>=4.20",     # FDX schema conformance validation (item-27)
 ]
 
 [tool.pytest.ini_options]

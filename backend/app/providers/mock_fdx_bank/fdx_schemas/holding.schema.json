@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cdb:fdx/holding",
+  "title": "FDX Investment Holding (hand-authored subset)",
+  "description": "A holding embedded in an investment account's detail. FDX uses 'units' (the canonical model renames it 'quantity'). See docs/fdx-conformance.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["holdingId", "holdingType", "units", "currency", "asOf"],
+  "properties": {
+    "holdingId": { "type": "string" },
+    "holdingType": { "type": "string" },
+    "symbol": { "type": ["string", "null"] },
+    "units": { "type": "number" },
+    "costBasis": { "type": "number" },
+    "currentUnitPrice": { "type": "number" },
+    "marketValue": { "type": "number" },
+    "currency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currencyCode"],
+      "properties": { "currencyCode": { "type": "string" } }
+    },
+    "asOf": { "type": "string" }
+  }
+}
