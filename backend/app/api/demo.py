@@ -22,7 +22,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 
 from app.adapters.base import SourceAdapter
-from app.agent import AGENT_ID, REQUIRED_SCOPES, run_cash_finder
+from app.agent import AGENT_ID, REQUIRED_SCOPES, CashSuggestion, run_cash_finder
 from app.consent import (
     AuditLog,
     ConsentDenied,
@@ -68,6 +68,31 @@ class Connection:
     source_label: str
 
 
+# Where a suggestion sits in the human-in-the-loop queue (item-28).
+PENDING = "PENDING"
+DECISIONS: dict[str, str] = {
+    "APPROVE": "APPROVED",
+    "REJECT": "REJECTED",
+    "REQUEST_CHANGES": "CHANGES_REQUESTED",
+}
+
+
+@dataclass
+class Approval:
+    """A suggestion-only action awaiting the human's Approve / Reject / Request changes.
+
+    The agent only ever *suggests*, so approving executes nothing — the queue
+    exists to make the human-in-the-loop decision a first-class, logged object.
+    """
+
+    approval_id: str
+    created_at: datetime
+    suggestion: CashSuggestion
+    status: str = PENDING
+    note: str | None = None
+    decided_at: datetime | None = None
+
+
 @dataclass
 class AggregatorState:
     """Everything the dashboards operate on."""
@@ -79,11 +104,29 @@ class AggregatorState:
     customer_id: str = CUSTOMER_ID
     recipient: str = RECIPIENT
     agent_delegation_id: str | None = None
+    agent_paused: bool = False
+    approvals: list[Approval] = field(default_factory=list)
     _seq: int = field(default=0, repr=False)
+    _approval_seq: int = field(default=0, repr=False)
 
     def next_connection_id(self) -> str:
         self._seq += 1
         return f"con-{self._seq}"
+
+    def next_approval_id(self) -> str:
+        self._approval_seq += 1
+        return f"apr-{self._approval_seq}"
+
+    def enqueue_suggestion(self, suggestion: CashSuggestion, at: datetime) -> Approval:
+        """Record a fresh suggestion as a pending item in the approval queue."""
+        approval = Approval(
+            approval_id=self.next_approval_id(), created_at=at, suggestion=suggestion
+        )
+        self.approvals.append(approval)
+        return approval
+
+    def approval(self, approval_id: str) -> Approval | None:
+        return next((a for a in self.approvals if a.approval_id == approval_id), None)
 
     def reader(self) -> ConsentEnforcingReader:
         """A consent-enforcing reader over the aggregated source + audit log."""
@@ -346,8 +389,9 @@ def _seed_agent_delegation(state: AggregatorState, now: datetime) -> None:
         consent_id="agent-del-1",
     )
     state.agent_delegation_id = consent.consent_id
-    # Run once so the traceability log opens showing the agent's (logged) access.
-    run_cash_finder(
+    # Run once so the traceability log (and the activity feed) opens showing the
+    # agent's logged access, and the approval queue opens with one pending item.
+    suggestion = run_cash_finder(
         state.reader(),
         customer_id=state.customer_id,
         account_ids=account_ids,
@@ -356,6 +400,7 @@ def _seed_agent_delegation(state: AggregatorState, now: datetime) -> None:
         ),
         at=now,
     )
+    state.enqueue_suggestion(suggestion, now)
 
 
 def _seed_audit_trail(state: AggregatorState, now: datetime) -> None:

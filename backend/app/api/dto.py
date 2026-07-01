@@ -200,3 +200,71 @@ class SuggestionView(ApiModel):
     analyzed: list[AnalyzedAccountView]
     not_counted: list[NotCountedView]
     advisory: str = "This is a suggestion. Nothing was moved — the assistant has read-only access."
+
+
+# --- Agent activity & authority console (item-28) ----------------------------
+
+
+class AgentActivityRow(ApiModel):
+    """One line in the agent's live action feed — a single logged read."""
+
+    occurred_at: datetime
+    intent: str  # human phrase: "Read current balance"
+    action: str  # raw audit action, e.g. read_balances
+    scope: ConsentScope
+    account_id: str | None
+    source_label: str | None
+    authorizing_consent_id: str | None  # the grant this read relied on
+    allowed: bool
+    status: str  # "authorized" / "denied"
+
+
+class AgentActivityView(ApiModel):
+    """The agent's action feed plus whether it is currently able to act."""
+
+    live: bool  # active delegation and not paused → the agent can act now
+    halted_reason: str | None  # why the feed is halted (revoked / paused / expired / none)
+    rows: list[AgentActivityRow]
+
+
+class AuthorityView(ApiModel):
+    """The scoped authority the agent holds right now — the authority card."""
+
+    agent_id: str
+    agent_name: str
+    description: str
+    status: str  # GRANTED / EXPIRED / REVOKED / NONE
+    paused: bool
+    scopes: list[ConsentScope]
+    account_ids: list[str]
+    created_at: datetime | None = None
+    expires_at: datetime | None = None
+    revoked_at: datetime | None = None
+    seconds_remaining: int | None = None  # time left on the delegation, floored at 0
+
+
+class ScopePreviewView(ApiModel):
+    """Intent → scope preview: what a grant would and wouldn't let the agent see."""
+
+    agent_name: str
+    duration_days: int
+    account_ids: list[str]
+    account_count: int
+    visible: list[ScopeInfo]  # scopes the delegation would grant
+    withheld: list[ScopeInfo]  # scopes it would leave off — the agent stays blind to these
+
+
+class ApprovalView(ApiModel):
+    """A suggestion-only action awaiting the human's decision."""
+
+    approval_id: str
+    created_at: datetime
+    status: str  # PENDING / APPROVED / REJECTED / CHANGES_REQUESTED
+    note: str | None
+    decided_at: datetime | None
+    suggestion: SuggestionView
+
+
+class ApprovalDecisionRequest(ApiModel):
+    decision: str  # APPROVE / REJECT / REQUEST_CHANGES
+    note: str | None = None

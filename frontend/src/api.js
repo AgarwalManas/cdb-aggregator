@@ -33,6 +33,20 @@ export const delegateAgent = () => request("/agent/delegation", { method: "POST"
 export const revokeDelegation = () => request("/agent/delegation/revoke", { method: "POST" });
 export const runAgent = () => request("/agent/run", { method: "POST" });
 
+// Agent activity & authority console (item-28)
+export const getAuthority = () => request("/agent/authority");
+export const getActivity = () => request("/agent/activity");
+export const getScopePreview = () => request("/agent/preview");
+export const getApprovals = () => request("/agent/approvals");
+export const pauseAgent = () => request("/agent/pause", { method: "POST" });
+export const resumeAgent = () => request("/agent/resume", { method: "POST" });
+export const decideApproval = (approvalId, body) =>
+  request(`/agent/approvals/${approvalId}/decision`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
 export const revokeConnection = (connectionId) =>
   request(`/connections/${connectionId}/revoke`, { method: "POST" });
 

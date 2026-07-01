@@ -789,6 +789,214 @@ button:disabled {
   font-weight: 600;
 }
 
+/* Agent activity & authority console (item-28) */
+.console-intro {
+  margin: 0 0 20px;
+  max-width: 70ch;
+}
+.console-main {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.authority {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.authority-meta {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.authority-meta div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+.authority-meta dt {
+  color: var(--muted);
+}
+.authority-meta dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  color: var(--ink);
+  text-align: right;
+}
+.authority-controls {
+  display: flex;
+  gap: 8px;
+}
+.authority-controls .btn-primary,
+.authority-controls .btn-revoke {
+  flex: 1;
+  margin-top: 0;
+}
+
+/* Intent → scope preview: a dashed card, since nothing is granted yet. */
+.scope-preview {
+  margin-top: 16px;
+  border-style: dashed;
+}
+.scope-preview h3 {
+  margin: 0 0 6px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+.preview-cols {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+.preview-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.preview-yes,
+.preview-no {
+  margin: 0 0 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.preview-yes {
+  color: var(--accent);
+}
+.preview-no {
+  color: var(--muted);
+}
+.withheld-row strong {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+/* Live action feed */
+.feed-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.feed-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.feed-head h2 {
+  margin: 0;
+}
+.live-dot {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 10px 3px 20px;
+  border-radius: 999px;
+  position: relative;
+}
+.live-dot::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.live-dot.on {
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+.live-dot.on::before {
+  background: var(--accent);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+.live-dot.off {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.live-dot.off::before {
+  background: var(--muted);
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+.halt-banner {
+  background: var(--surface-2);
+  color: var(--ink);
+  border: 1px solid var(--hairline);
+  border-left: 3px solid var(--ink);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 13px;
+}
+.activity-table code {
+  font-size: 11.5px;
+}
+
+/* Approval queue — human-in-the-loop decisions on suggestion-only actions. */
+.approvals-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.approvals-section h2 {
+  margin: 0;
+}
+.approval {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.approval.decided {
+  opacity: 0.72;
+}
+.approval .card-head h3 {
+  font-size: 14px;
+}
+/* The nested suggestion drops its own card chrome inside an approval. */
+.approval .suggestion {
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  background: transparent;
+}
+.approval-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.approval-actions button {
+  flex: 1;
+  min-width: 120px;
+  margin-top: 0;
+}
+.decided-line {
+  margin: 0;
+  font-size: 13px;
+}
+@media (min-width: 720px) {
+  .preview-cols {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 /* An error stands out by contrast and weight, not by a new colour. */
 .error {
   background: var(--surface-2);
