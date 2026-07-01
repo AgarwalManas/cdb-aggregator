@@ -76,7 +76,7 @@ Frontend is **React** either way (their frontend is React/React Native).
 **Kickoff prompt:**
 > Wealthsimple project, **Item 8 — traceability audit log + data minimization**. Pull the to-do list and the consent layer (Item 7) from this project's history. Add an append-only access log tied to consent grants, and enforce field-level data minimization per scope.
 
-### [ ] Item 9 — Consent dashboard UI (React)
+### [x] Item 9 — Consent dashboard UI (React)
 **Produces:** the React UI for the consent layer — list connections, show scopes + expiry, **one-tap revoke**, and a view of the audit log. This is the screen you'll demo first; make it clean.
 **Depends on:** Items 7, 8.
 **Kickoff prompt:**

@@ -13,9 +13,11 @@ or use the convenience script:
 from __future__ import annotations
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
-from app.api.routes import health
+from app.api.demo import build_demo_state
+from app.api.routes import consent, health
 from app.core.config import get_settings
 
 
@@ -31,10 +33,22 @@ def create_app() -> FastAPI:
         "first-class consent + traceability layer.",
     )
 
-    # Routers. Later phases register additional routers here:
-    #   - accounts / transactions (Phase 3)
-    #   - consent grant / revoke + audit log (Phase 2)
+    # The consent dashboard (Item 9) is a separate React app in ../frontend, so
+    # allow it to call this API cross-origin. Open in this local/demo build.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # In-memory demo world the consent dashboard reads and mutates. A real
+    # deployment builds this from a database + the connected sources instead.
+    app.state.aggregator = build_demo_state()
+
+    # Routers. Phase 3 will add accounts / transactions here.
     app.include_router(health.router)
+    app.include_router(consent.router)
 
     @app.get("/", tags=["meta"], summary="Service root")
     def root() -> dict[str, str]:
