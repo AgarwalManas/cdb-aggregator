@@ -363,3 +363,47 @@ class RoutingCoordinatesView(ApiModel):
 
 class RepointRequest(ApiModel):
     account_id: str
+
+
+# --- Access receipts + permission simulation (item-29) -----------------------
+
+
+class ReceiptView(ApiModel):
+    """An audit event reshaped as a consumer-legible access receipt."""
+
+    receipt_id: str
+    occurred_at: datetime
+    accessor: str  # the raw recipient id
+    accessor_label: str  # "The aggregator" / "The assistant" / a counterparty
+    accessor_type: str  # aggregator / agent / counterparty / other
+    purpose: str
+    cluster: str  # the scope value
+    cluster_label: str
+    fields: list[str]  # the fields this cluster covers
+    account_id: str | None
+    authorizing_consent_id: str | None
+    allowed: bool
+    record_count: int
+    withheld: list[str]  # human labels of the clusters minimized away
+    why: str  # one-line "why this was accessed"
+
+
+class FieldView(ApiModel):
+    """One field a scope would expose, with an illustrative value."""
+
+    cluster: str
+    cluster_label: str
+    name: str
+    example: str
+
+
+class PermissionSimulationRequest(ApiModel):
+    scopes: list[ConsentScope]
+
+
+class PermissionSimulationView(ApiModel):
+    """What a candidate scope set would expose vs withhold, before granting."""
+
+    scopes: list[ConsentScope]
+    visible: list[FieldView]
+    withheld: list[FieldView]

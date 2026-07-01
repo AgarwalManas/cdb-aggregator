@@ -23,6 +23,15 @@ export const getAuditChain = () => request("/audit/chain"); // full chain, for i
 // Old-way vs new-way contrast (item-20)
 export const getComparison = () => request("/comparison");
 
+// Access receipts + permission simulation (item-29)
+export const getReceipts = () => request("/receipts");
+export const simulatePermissions = (scopes) =>
+  request("/permission-simulation", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ scopes }),
+  });
+
 // Aggregation (Item 10)
 export const getAccounts = () => request("/accounts");
 export const getTransactions = () => request("/transactions");
