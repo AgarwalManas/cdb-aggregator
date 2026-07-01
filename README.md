@@ -16,6 +16,35 @@ fully-logged** task to an AI agent.
 
 ---
 
+## Try it live
+
+The whole app — API **and** UI — runs as a single service, so it deploys to one
+public URL with continuous deployment: **every push redeploys the latest code**,
+so the link always serves what's on `main`.
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/AgarwalManas/cdb-aggregator)
+
+Clicking the button reads [`render.yaml`](render.yaml), builds the
+[`Dockerfile`](Dockerfile) (compiles the React app, then serves it from FastAPI),
+and stands up a live URL. Because `autoDeploy` is on, later pushes redeploy
+automatically — change something today and the link reflects it on the next push,
+no manual step.
+
+> Honest scope, same as everywhere else here: it's seeded with **demo data** and
+> in-memory state, there's no login, and the free tier **cold-starts after idle**
+> (the first hit takes a few seconds to wake). It demonstrates the architecture;
+> it isn't a live integration with any real bank.
+
+Prefer to run it yourself? One command with Docker, or the from-source
+[Quickstart](#quickstart) below:
+
+```bash
+docker build -t cdb-aggregator . && docker run --rm -p 8000:8000 cdb-aggregator
+# → http://localhost:8000  (UI, API at /api, docs at /docs)
+```
+
+---
+
 ## The regulatory moment
 
 Canada's open-banking framework just moved from proposal to law:
@@ -117,7 +146,9 @@ cdb-aggregator/
 │   ├── screen-scraping.md      # "why screen-scraping is about to break"
 │   ├── build-todo.md           # the 14-item build plan
 │   └── research-report.md      # strategic context
-└── .github/workflows/          # ci.yml (lint+tests+build) · tag-items.yml
+├── Dockerfile                  # one image: build the UI, serve it + the API
+├── render.yaml                 # Render blueprint — one-click, auto-deploying URL
+└── .github/workflows/          # ci.yml (lint+tests+build) · tag-items.yml · retag.yml
 ```
 
 ---
@@ -151,6 +182,19 @@ Three tabs, all read through the consent gate:
   the audit log (with *who* accessed — aggregator vs. delegated agent).
 - **Assistant** — delegate a scoped, revocable task to the idle-cash agent; it
   suggests, it never acts.
+
+### Run it as one service (prod-style)
+
+In dev the two run separately (Vite proxies `/api` to the backend). For a
+single-process deploy, build the UI and point the API at it — then FastAPI
+serves the SPA at `/` and the API under `/api` on one port. This is exactly what
+the [Dockerfile](Dockerfile) and the [live deploy](#try-it-live) do.
+
+```bash
+cd frontend && npm install && npm run build && cd ..
+CDB_FRONTEND_DIST="$PWD/frontend/dist" uvicorn app.main:app --app-dir backend
+# → http://127.0.0.1:8000  (UI + API + /docs, one process)
+```
 
 ### Run the mock providers (optional)
 

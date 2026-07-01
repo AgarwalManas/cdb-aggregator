@@ -1,0 +1,28 @@
+# Keep the build context small and reproducible: never copy local build
+# artifacts, dependencies, or caches into the image — they're rebuilt inside it.
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+.venv/
+venv/
+
+# Node / frontend (deps and any local build are recreated in the web stage)
+frontend/node_modules/
+frontend/dist/
+
+# Tooling / VCS / env
+.git/
+.github/
+.ruff_cache/
+.env
+.env.*
+!.env.example
+
+# Docs and local scratch aren't needed at runtime
+*.md
+!README.md

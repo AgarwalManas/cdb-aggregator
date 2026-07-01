@@ -1,0 +1,24 @@
+# Render Blueprint — a one-click, always-latest deploy of the whole app.
+#
+# What it gives you:
+#   • A public HTTPS URL that serves both the API and the React UI (one service,
+#     built from the Dockerfile).
+#   • Continuous deployment: autoDeploy redeploys on every push to the connected
+#     branch, so the link always runs the latest code — change something today,
+#     the URL serves it on the next push, no manual step.
+#
+# Deploy it from the "Try it live" button in the README, or point Render at this
+# repo (New → Blueprint). The free plan cold-starts after idle; first hit wakes it.
+services:
+  - type: web
+    name: cdb-aggregator
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true # redeploy automatically on each push -> the link is always latest
+    healthCheckPath: /health
+    envVars:
+      # The image already bakes this in; set here too so it's explicit in the
+      # blueprint and easy to see where the UI is served from.
+      - key: CDB_FRONTEND_DIST
+        value: /app/frontend/dist

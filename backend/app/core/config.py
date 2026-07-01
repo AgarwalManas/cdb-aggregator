@@ -36,6 +36,12 @@ class Settings(BaseSettings):
     host: str = "127.0.0.1"
     port: int = 8000
 
+    # Optional path to the built React app (frontend/dist). When set to a real
+    # directory, the API also serves the single-page app at "/", so one process
+    # hosts both the API and the UI — that's what the container deploy uses
+    # (CDB_FRONTEND_DIST). Unset in local dev, where Vite serves the UI on 5173.
+    frontend_dist: str | None = None
+
     # Mock data providers. Base URLs the Item 5 adapters read from: the clean
     # FDX bank (Item 3) and the messy legacy bank (Item 4).
     provider_fdx_base_url: str = "http://127.0.0.1:9001"

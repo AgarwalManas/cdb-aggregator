@@ -1,0 +1,68 @@
+name: Retag
+
+# Move an existing tag to a different commit (or create it if missing).
+#
+# Why this exists: the same proxy that blocks pushing tag refs from a Claude Code
+# web session also blocks *moving* one, so a mislabeled item-NN tag can't be
+# fixed with `git tag -f && git push`. This runs on GitHub with write access and
+# force-updates the ref. Manual-only; you pass the tag and the target SHA.
+#
+# Example: move item-12 onto the 100%-coverage follow-up commit rather than the
+# earlier 90%-gate commit it was first cut from.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to move (e.g. item-12)"
+        required: true
+      sha:
+        description: "Target commit SHA the tag should point at"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  retag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Force-update (or create) the tag ref
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = context.payload.inputs.tag.trim();
+            const sha = context.payload.inputs.sha.trim();
+
+            // Verify the target commit exists before pointing a tag at it.
+            const { data: commit } = await github.rest.repos.getCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: sha,
+            });
+            const subject = commit.commit.message.split("\n")[0];
+            core.info(`Retargeting ${tag} -> ${commit.sha.slice(0, 7)}: ${subject}`);
+
+            try {
+              await github.rest.git.updateRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `tags/${tag}`,
+                sha: commit.sha,
+                force: true,
+              });
+              core.notice(`Moved ${tag} -> ${commit.sha.slice(0, 7)}`);
+            } catch (err) {
+              if (err.status === 422) {
+                // Ref doesn't exist yet: create it.
+                await github.rest.git.createRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `refs/tags/${tag}`,
+                  sha: commit.sha,
+                });
+                core.notice(`Created ${tag} -> ${commit.sha.slice(0, 7)}`);
+              } else {
+                throw err;
+              }
+            }

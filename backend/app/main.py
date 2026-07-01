@@ -12,8 +12,11 @@ or use the convenience script:
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app import __version__
 from app.api.demo import build_demo_state
@@ -51,16 +54,32 @@ def create_app() -> FastAPI:
     app.include_router(aggregation.router)  # Item 10: unified accounts / net worth
     app.include_router(agent.router)  # Item 11: agentic delegation
 
-    @app.get("/", tags=["meta"], summary="Service root")
-    def root() -> dict[str, str]:
-        """Friendly root payload pointing at the interactive docs."""
-        return {
-            "service": settings.app_name,
-            "docs": "/docs",
-            "health": "/health",
-        }
+    dist = _frontend_dist(settings.frontend_dist)
+    if dist is None:
+
+        @app.get("/", tags=["meta"], summary="Service root")
+        def root() -> dict[str, str]:
+            """Friendly root payload pointing at the interactive docs."""
+            return {
+                "service": settings.app_name,
+                "docs": "/docs",
+                "health": "/health",
+            }
+    else:
+        # Serve the built single-page app at "/". Mounted last so the explicit
+        # /health, /docs and /api/* routes above still win; html=True makes it
+        # serve index.html for "/" and unknown client-side routes.
+        app.mount("/", StaticFiles(directory=dist, html=True), name="frontend")
 
     return app
+
+
+def _frontend_dist(configured: str | None) -> Path | None:
+    """Return the built-frontend directory if configured and present, else None."""
+    if not configured:
+        return None
+    path = Path(configured)
+    return path if path.is_dir() else None
 
 
 app = create_app()
