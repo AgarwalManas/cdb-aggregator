@@ -115,7 +115,7 @@ Frontend is **React** either way (their frontend is React/React Native).
 **Kickoff prompt:**
 > Wealthsimple project, **Item 12 — test hardening + GitHub Actions CI**. Pull the to-do list and the current codebase summary from this project's history. Broaden tests across adapters/consent/data-minimization and add a CI workflow.
 
-### [ ] Item 13 — README, ADRs, and the screen-scraping writeup
+### [x] Item 13 — README, ADRs, and the screen-scraping writeup
 **Produces:** a polished README framed around the client and the regulatory moment (CDBA dates, FDX, the consent architecture, trade-offs); a few short **architecture decision records**; and a standalone "why screen-scraping is about to break" explainer.
 **Depends on:** most build items done.
 **Kickoff prompt:**

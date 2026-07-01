@@ -8,6 +8,10 @@ self-contained and any coding session (or reviewer) has the full picture.
   `item-02`, ...).
 - **research-report.md** — why this project is aimed where it's aimed: the
   strategic and regulatory context (CDBA, FDX, consent/traceability) it targets.
+- **adr/** — architecture decision records: the *why* behind the key structural
+  choices, one file per decision.
+- **screen-scraping.md** — "why screen-scraping is about to break": the argument
+  for building FDX-first, with the old-way/new-way contrast.
 
 > These are planning artifacts, not claims of live regulatory integration. See
 > the root README for scope.

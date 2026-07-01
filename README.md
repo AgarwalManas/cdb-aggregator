@@ -4,67 +4,96 @@
 
 An **FDX-aligned account aggregator** for Canada's Consumer-Driven Banking era,
 built around a **first-class consent and traceability layer** — the part that
-separates an accredited open-banking participant from a credential-storing
-screen scraper.
+separates an accredited open-banking participant from a credential-storing screen
+scraper.
 
-> **Status:** phased build in progress. The canonical model, three mock
-> providers (FDX / messy / screen-scraped), the normalizer, the consent +
-> traceability engine, both React dashboards, and an agentic-delegation layer are
-> in; CI runs lint + tests (100% coverage, warnings-as-errors) + the frontend
-> build on every push.
-> See [Roadmap](#roadmap). A full rewrite lands in Item 13.
-
----
-
-## Why this exists
-
-Canada's **Consumer-Driven Banking Act (CDBA)** establishes a consumer's right
-to direct their own financial data — securely, with consent, and without handing
-over banking credentials. The **Financial Data Exchange (FDX)** standard is the
-emerging North American technical expression of that right: token-based access
-(OAuth 2.0 / FAPI), granular and time-limited permissions, and five core
-principles — **Control, Access, Transparency, Traceability, Security**.
-
-Today, most account aggregation in Canada still leans on **screen scraping** and
-shared credentials. That approach is brittle (it breaks when a bank changes its
-login page) and it asks users to surrender far more access than any single
-feature needs. This project is built the other way around: **FDX-first**, with
-consent and an auditable access trail treated as the core product, not an
-afterthought.
-
-### What this is — and isn't
-
-- It **is** a working demonstration of the *architecture* open banking calls for:
-  a canonical FDX-shaped data model, source adapters that normalize messy real-world
-  data into it, and a consent layer that gates and logs every read.
-- It is **not** a live integration with any real financial institution or
-  regulator. Canada's Phase-1 (read access) had no firm Bank of Canada launch
-  date as of early 2026, so this models the standard rather than claiming
-  certified connectivity. The mock data providers are deliberately stand-ins for
-  FDX-compliant banks.
+It ingests data from three deliberately different mock sources, normalizes them
+into one FDX-shaped model, and gates **every read** on an active, in-scope,
+revocable consent — logging each access to an append-only trail and returning only
+the fields the customer actually shared. On top of that sits a unified net-worth
+dashboard and an agentic-delegation layer that hands a **scoped, revocable,
+fully-logged** task to an AI agent.
 
 ---
 
-## Architecture (target)
+## The regulatory moment
 
-The data flow this scaffold is built to grow into:
+Canada's open-banking framework just moved from proposal to law:
+
+- **Bill C-15 received Royal Assent on March 26, 2026**, replacing the original
+  Consumer-Driven Banking Act with a comprehensive new **CDBA** and moving
+  oversight to the **Bank of Canada**.
+- **Phase 1 (read access)** was targeted for early 2026; **Phase 2 (write —
+  payment initiation, account switching)** for mid-2027, contingent on Real-Time
+  Rail. Timing is genuinely uncertain — this project is built *for* that world,
+  it does not claim to be *in* it yet.
+- The technical standard is **[FDX](https://financialdataexchange.org/)** —
+  OAuth 2.0 + FAPI, granular time-limited permissions, and five principles:
+  **Control, Access, Transparency, Traceability, Security.**
+
+Most aggregation in Canada still runs on **screen-scraping and shared
+credentials** — brittle, and far more access than any feature needs. This project
+is built the other way around: FDX-first, with consent and an auditable access
+trail as the core product. See **[docs/screen-scraping.md](docs/screen-scraping.md)**
+for the full "why screen-scraping is about to break" argument.
+
+### What it is — and isn't
+
+- It **is** a working demonstration of the architecture open banking calls for:
+  a canonical FDX model, adapters that normalize messy sources into it, and a
+  consent layer that gates, logs, and minimizes every read.
+- It is **not** a live integration with any real institution or regulator. The
+  data sources are mocks; persistence is in-memory (see
+  [ADR 0006](docs/adr/0006-in-memory-stores-and-mocks.md)). It models the
+  standard rather than claiming certified connectivity.
+
+---
+
+## The star: consent & traceability
+
+Every capability below is enforced at a **single choke point** — a consent gate
+that all data reads pass through ([ADR 0003](docs/adr/0003-consent-as-a-gate.md)):
+
+- **Granular scopes** — account details, balances, transactions, investment
+  holdings, customer identity, customer contact — granted per connection.
+- **Time-limited & revocable** — grants expire; one-tap revoke stops access
+  immediately.
+- **Enforced on every read** — no active, in-scope grant covering the account
+  means no data, with a specific reason (`NO_CONSENT` / `INACTIVE` /
+  `SCOPE_NOT_GRANTED` / `ACCOUNT_NOT_COVERED`).
+- **Traceability** — an append-only audit log records every access (allowed *or*
+  denied), tied to the grant it relied on, noting what was disclosed and what was
+  withheld ([ADR 0004](docs/adr/0004-traceability-and-minimization.md)).
+- **Data minimization** — a read returns only the fields the granted scopes
+  permit; balances you didn't share drop out of net worth as *excluded*, not
+  silently.
+- **Agentic delegation** — a task delegated to an AI agent is just another consent
+  to an agent identity: scoped, revocable, logged, and suggestion-only
+  ([ADR 0005](docs/adr/0005-agentic-delegation-as-consent.md)).
+
+---
+
+## Architecture
 
 ```
-  Mock FDX bank ─┐
-                 ├─▶  Adapters / normalizer ─▶  Canonical FDX model ─┐
-  Messy bank   ──┘     (one per source)         (Account, Balance,    │
-                                                 Transaction, ...)     │
-                                                                       ▼
-                                            ┌───────────────────────────────────┐
-   React client  ◀── REST ──  FastAPI  ◀──  │  CONSENT + TRACEABILITY GATE       │
-   (dashboards)                             │  every read checks an active,      │
-                                            │  in-scope grant, then writes an    │
-                                            │  append-only audit entry           │
-                                            └───────────────────────────────────┘
+  Mock FDX bank ─┐   (OAuth2 + FDX JSON)
+  Legacy bank   ─┼─▶  Adapters / normalizer ─▶  Canonical FDX model
+  OldBank (scrape)┘   (one per source)          (Account, Balance, Transaction,
+                                                 InvestmentHolding, Customer, Consent)
+                                                        │
+                                                        ▼
+                         ┌─────────────────────────────────────────────────┐
+   React client  ◀─REST─ │  CONSENT + TRACEABILITY GATE                     │
+   Overview /            │  every read → active in-scope grant? → minimize  │
+   Consent /             │  → append-only audit entry (who, what, withheld) │
+   Assistant             └─────────────────────────────────────────────────┘
+                                                        ▲
+                                    delegated agent (scoped, revocable, logged)
 ```
 
-Every data read passes through the consent gate. No active, in-scope grant means
-no data — and each read that *is* allowed leaves a traceable record.
+Three sources with three very different shapes normalize into one model; the gate
+sits between that model and everything that consumes it — the dashboards and the
+agent alike.
 
 ### Repository layout
 
@@ -72,171 +101,139 @@ no data — and each read that *is* allowed leaves a traceable record.
 cdb-aggregator/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py            # FastAPI app factory + entry point
-│   │   ├── core/             # config (typed settings), cross-cutting concerns
-│   │   ├── api/routes/       # HTTP endpoints (health now; more per phase)
-│   │   ├── models/           # canonical FDX data model            (Item 2)
-│   │   ├── providers/        # mock FDX bank + messy-schema bank    (Items 3-4)
-│   │   ├── adapters/         # normalizers: raw source -> canonical (Item 5)
-│   │   └── consent/          # consent lifecycle + audit log        (Items 7-8)
-│   └── tests/                # pytest suite
-├── frontend/                 # React client placeholder             (Items 9-10)
-├── pyproject.toml
-├── .env.example
-└── README.md
+│   │   ├── main.py             # FastAPI app factory (CORS, routers, demo state)
+│   │   ├── core/config.py      # typed settings
+│   │   ├── models/             # canonical FDX model                    (Item 2)
+│   │   ├── providers/          # mock FDX / legacy / scraped banks      (Items 3,4,6)
+│   │   ├── adapters/           # normalizers: raw source → canonical    (Items 5,6)
+│   │   ├── consent/            # store, gate, reader, audit, minimize   (Items 7,8)
+│   │   ├── agent/              # idle-cash finder (delegated intent)     (Item 11)
+│   │   ├── comparison.py       # old-way vs new-way contrast            (Item 6)
+│   │   └── api/                # consent + aggregation + agent HTTP API  (Items 9–11)
+│   └── tests/                  # pytest suite (100% coverage)
+├── frontend/                   # React (Vite): Overview / Consent / Assistant
+├── docs/
+│   ├── adr/                    # architecture decision records
+│   ├── screen-scraping.md      # "why screen-scraping is about to break"
+│   ├── build-todo.md           # the 14-item build plan
+│   └── research-report.md      # strategic context
+└── .github/workflows/          # ci.yml (lint+tests+build) · tag-items.yml
 ```
-
-The empty package folders are intentional: each has a docstring describing the
-phase that fills it, so the structure documents the plan.
 
 ---
 
 ## Quickstart
 
-Requires **Python 3.11+**.
+Requires **Python 3.11+** and **Node 20+**.
 
 ```bash
-# 1. Create and activate a virtual environment
-python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
-
-# 2. Install the project (with dev tools)
+# 1. Install the backend (with dev tools)
 pip install -e ".[dev]"
 
-# 3. Run the API
-uvicorn app.main:app --reload --app-dir backend
+# 2. Run the aggregator API
+uvicorn app.main:app --reload --app-dir backend      # http://127.0.0.1:8000
 ```
 
-Then visit:
-
-- <http://127.0.0.1:8000/health> — liveness probe
 - <http://127.0.0.1:8000/docs> — interactive OpenAPI docs
+- <http://127.0.0.1:8000/api/net-worth>, `/api/connections`, `/api/audit`, … — the
+  dashboard API
 
-### Run the mock FDX bank (Item 3)
-
-A standalone mock data provider that issues OAuth2 tokens and serves FDX-shaped
-JSON — the clean, standards-native source the normalizer will consume. Run it in
-a separate terminal:
+### Run the dashboard
 
 ```bash
-uvicorn app.providers.mock_fdx_bank.app:app --app-dir backend --port 9001
+cd frontend && npm install && npm run dev            # http://localhost:5173
 ```
 
-Then exchange client credentials for a token and call a protected endpoint:
+Three tabs, all read through the consent gate:
+
+- **Overview** — household net worth, merged accounts, merged transaction feed.
+- **Consent & Traceability** — connections, scopes, expiry, one-tap revoke, and
+  the audit log (with *who* accessed — aggregator vs. delegated agent).
+- **Assistant** — delegate a scoped, revocable task to the idle-cash agent; it
+  suggests, it never acts.
+
+### Run the mock providers (optional)
+
+Each is a standalone service the adapters can talk to over HTTP:
 
 ```bash
-TOKEN=$(curl -s -X POST http://127.0.0.1:9001/oauth2/token \
-  -d grant_type=client_credentials \
-  -d client_id=cdb-aggregator -d client_secret=local-mock-secret \
-  | python -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
-
-curl -s -H "Authorization: Bearer $TOKEN" http://127.0.0.1:9001/fdx/v6/accounts
+uvicorn app.providers.mock_fdx_bank.app:app --app-dir backend --port 9001  # OAuth2 + FDX
+uvicorn app.providers.legacy_bank.app:app   --app-dir backend --port 9002  # messy schema
+uvicorn app.providers.scraper_bank.app:app  --app-dir backend --port 9003  # HTML to scrape
 ```
 
-See `backend/app/providers/mock_fdx_bank/README.md` for the full endpoint list.
-
-### Run the legacy bank (Item 4)
-
-A second mock source with a deliberately **messy, non-FDX schema** (session auth,
-one nested blob, abbreviated fields, signed amounts, mixed date formats) — the
-hard case that justifies the normalizer:
-
-```bash
-uvicorn app.providers.legacy_bank.app:app --app-dir backend --port 9002
-```
-
-See `backend/app/providers/legacy_bank/README.md` for how it differs from FDX.
-
-### Run the screen-scraping mock (Item 6, stretch)
-
-A mock bank *website* (login form + HTML statement, no API) that dramatizes the
-"old way" — credential sharing and fragile HTML parsing — versus token-based FDX
-access:
-
-```bash
-uvicorn app.providers.scraper_bank.app:app --app-dir backend --port 9003
-```
-
-The scraper adapter (`app.adapters.scraper_bank`) parses its HTML into the same
-canonical model; the structured contrast is in `app.comparison`. See
-`backend/app/providers/scraper_bank/README.md`.
-
-### Run the dashboard (Items 9-10)
-
-The React client — two tabs: an **Overview** (household net worth, merged
-accounts, merged transaction feed) and **Consent & Traceability** (connections,
-scopes, expiry, one-tap revoke, audit log). Every figure is read through the
-consent gate. With the API running (step 3 above), start the client in another
-terminal:
-
-```bash
-cd frontend
-npm install
-npm run dev        # http://localhost:5173  (proxies /api to the backend)
-```
-
-See `frontend/README.md`.
-
-### Run the tests
-
-```bash
-pytest
-```
-
-### Configuration
-
-Copy `.env.example` to `.env` to override defaults (all variables are prefixed
-`CDB_`). Settings are typed and centralized in `backend/app/core/config.py`.
+See each provider's `README.md` for endpoints and how it differs from FDX.
 
 ---
 
-## Roadmap
+## Testing & CI
 
-The build proceeds in dependency order. The consent + traceability layer is the
-centerpiece and gets the most polish.
+```bash
+pytest                                               # the full suite
+pytest --cov=app --cov-report=term-missing           # with coverage
+```
+
+- **100% line coverage**, enforced in CI (`--cov-fail-under=100`).
+- **Warnings are errors** — nothing slips through silently in a financial
+  codebase.
+- **[GitHub Actions](.github/workflows/ci.yml)** runs ruff (lint + format),
+  the tests + coverage gate, and the frontend build on every push and PR.
+
+Configuration is typed (`backend/app/core/config.py`); copy `.env.example` to
+`.env` to override (all vars prefixed `CDB_`).
+
+---
+
+## Design decisions
+
+The *why* behind the structure is recorded as **[ADRs](docs/adr/)**:
+
+| # | Decision |
+|---|----------|
+| [0001](docs/adr/0001-backend-fastapi.md) | Backend: FastAPI (Python) |
+| [0002](docs/adr/0002-fdx-aligned-canonical-model.md) | FDX-aligned model; `Decimal` money; camelCase wire format |
+| [0003](docs/adr/0003-consent-as-a-gate.md) | Consent as a gate every read passes |
+| [0004](docs/adr/0004-traceability-and-minimization.md) | Append-only audit + field-level minimization |
+| [0005](docs/adr/0005-agentic-delegation-as-consent.md) | Agent delegation as a consent to an agent identity |
+| [0006](docs/adr/0006-in-memory-stores-and-mocks.md) | In-memory stores + mock providers |
+
+---
+
+## Build timeline
+
+Built in **Items** (see [`docs/build-todo.md`](docs/build-todo.md)), in
+dependency order, each tagged so the history is a navigable timeline:
 
 | Phase | Items | What lands |
 |------:|-------|-----------|
-| **0 — Foundation** | 1–2 | Repo scaffold *(this)*; FDX-aligned canonical data model |
-| **1 — Ingestion** | 3–6 | Mock FDX bank; messy-schema bank; normalizer/adapter layer; (stretch) screen-scraping contrast |
-| **2 — Consent ★** | 7–9 | Consent lifecycle + enforcement; traceability audit log + data minimization; React consent dashboard |
+| **0 — Foundation** | 1–2 | Repo scaffold; FDX-aligned canonical model |
+| **1 — Ingestion** | 3–6 | Mock FDX bank; messy bank; normalizer; screen-scraping contrast |
+| **2 — Consent ★** | 7–9 | Consent lifecycle + enforcement; audit + minimization; consent dashboard |
 | **3 — Aggregation UX** | 10 | Unified accounts + household net-worth dashboard |
-| **4 — Differentiator** | 11 | One standout capability (agentic delegation / household / fee-leak) |
-| **5 — Packaging** | 12–14 | Test hardening + CI; full README + ADRs + screen-scraping writeup; project-review walkthrough |
+| **4 — Differentiator** | 11 | Agentic delegation / intent layer |
+| **5 — Packaging** | 12–14 | Test hardening + CI; README + ADRs + explainer; project-review walkthrough |
+
+```bash
+git tag                      # item-01 … item-14
+git checkout item-07         # inspect any milestone (e.g. the consent layer)
+```
 
 ---
 
-## How this repo is built
+## Trade-offs & honest scope
 
-The project is built in **Items** (see [`docs/build-todo.md`](docs/build-todo.md)),
-one per work session, in dependency order. History is kept legible:
-
-- Each Item lands as a commit (or a few) prefixed `Item NN — …`.
-- Each completed Item is tagged `item-NN`, so the build can be walked as a
-  timeline. To see a phase in isolation: `git checkout item-07` for the consent
-  layer, for example.
-
-```bash
-git log --oneline            # the build, step by step
-git tag                      # item-01, item-02, ...
-git checkout item-07         # inspect any milestone
-```
-
-## Design principles
-
-- **Keep it simple, make it obvious.** Small, typed, well-named modules; the
-  folder structure mirrors the data flow.
-- **Consent is not a feature, it's the gate.** Reads are designed to be
-  impossible without an active, in-scope grant — and to be traceable when they happen.
-- **Real tests, from the start.** Even the scaffold ships with a passing suite;
-  coverage grows with each phase.
-- **FDX-first, honest about scope.** Built to the standard, without claiming
-  regulatory certification that doesn't exist yet.
-- **Built with AI tooling, reviewed like an owner.** AI changes the *how*, not
-  the *why*; the decisions and trade-offs are documented as the build proceeds.
+- **Mock sources, in-memory persistence.** Deliberate — it demonstrates the
+  architecture without an external dependency, and the store interfaces are the
+  seam where a database drops in ([ADR 0006](docs/adr/0006-in-memory-stores-and-mocks.md)).
+- **FDX-aligned, not FDX-complete.** A faithful, pragmatic subset of the spec.
+- **The agent is deterministic by default.** The differentiator is the
+  *governance* around a delegated actor, not the AI; the engine is swappable for
+  an LLM without changing any of it ([ADR 0005](docs/adr/0005-agentic-delegation-as-consent.md)).
+- **Built for the standard, honest about timing.** No claim of certified
+  connectivity that doesn't exist yet.
 
 ## Tech stack
 
-- **Backend:** Python 3.11+, FastAPI, Pydantic v2, pydantic-settings
-- **Frontend:** React *(added in Phase 2)*
-- **Tooling:** pytest, ruff, GitHub Actions CI *(added in Phase 5)*
+- **Backend:** Python 3.11, FastAPI, Pydantic v2, httpx, BeautifulSoup
+- **Frontend:** React 18 + Vite
+- **Tooling:** pytest (+ coverage), ruff, GitHub Actions
