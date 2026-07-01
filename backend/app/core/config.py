@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     # FDX bank (Item 3) and the messy legacy bank (Item 4).
     provider_fdx_base_url: str = "http://127.0.0.1:9001"
     provider_legacy_base_url: str = "http://127.0.0.1:9002"
+    provider_scraper_base_url: str = "http://127.0.0.1:9003"  # screen-scraping mock (Item 6)
 
 
 @lru_cache

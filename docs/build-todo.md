@@ -54,7 +54,7 @@ Frontend is **React** either way (their frontend is React/React Native).
 **Kickoff prompt:**
 > Wealthsimple project, **Item 5 — normalizer/adapter layer**. Pull the to-do list, canonical model, and both mock sources (Items 3–4) from this project's history. Build one adapter per source mapping into the canonical model, with per-adapter tests.
 
-### [ ] Item 6 — (Stretch) Screen-scraping mock + "old way vs new way"
+### [x] Item 6 — (Stretch) Screen-scraping mock + "old way vs new way"
 **Produces:** a fake HTML statement page parsed by a scraper adapter, plus a toggle/comparison that dramatizes credential-based scraping vs token-based FDX access. Directly echoes the screen-scraping pain Wealthsimple has publicly documented.
 **Depends on:** Item 5.
 **Kickoff prompt:**

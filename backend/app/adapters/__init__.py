@@ -21,6 +21,7 @@ from .base import (
 )
 from .fdx_bank import FdxBankAdapter, FdxHttpClient
 from .legacy_bank import LegacyBankAdapter, LegacyHttpClient
+from .scraper_bank import HtmlStatementClient, ScraperBankAdapter
 
 __all__ = [
     "SourceAdapter",
@@ -31,4 +32,6 @@ __all__ = [
     "FdxHttpClient",
     "LegacyBankAdapter",
     "LegacyHttpClient",
+    "ScraperBankAdapter",
+    "HtmlStatementClient",
 ]

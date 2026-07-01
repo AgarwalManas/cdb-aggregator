@@ -142,6 +142,20 @@ uvicorn app.providers.legacy_bank.app:app --app-dir backend --port 9002
 
 See `backend/app/providers/legacy_bank/README.md` for how it differs from FDX.
 
+### Run the screen-scraping mock (Item 6, stretch)
+
+A mock bank *website* (login form + HTML statement, no API) that dramatizes the
+"old way" — credential sharing and fragile HTML parsing — versus token-based FDX
+access:
+
+```bash
+uvicorn app.providers.scraper_bank.app:app --app-dir backend --port 9003
+```
+
+The scraper adapter (`app.adapters.scraper_bank`) parses its HTML into the same
+canonical model; the structured contrast is in `app.comparison`. See
+`backend/app/providers/scraper_bank/README.md`.
+
 ### Run the tests
 
 ```bash
