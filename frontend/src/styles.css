@@ -2033,6 +2033,93 @@ button:disabled {
   }
 }
 
+/* Activity Log — merged audit + receipts table with export (slice 5) */
+.log-export {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.enhanced-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.enhanced-toggle input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+}
+.export-wrap {
+  position: relative;
+}
+.export-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 10px 30px rgba(16, 24, 40, 0.14);
+  display: flex;
+  flex-direction: column;
+  min-width: 210px;
+  padding: 6px;
+  gap: 2px;
+}
+.export-menu button {
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+.export-menu button:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.export-hint {
+  margin: 10px 0 12px;
+}
+.col-check {
+  width: 34px;
+  text-align: center;
+}
+.col-check input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  vertical-align: middle;
+}
+.row-click {
+  cursor: pointer;
+}
+.row-caret {
+  color: var(--muted);
+  margin-right: 6px;
+  font-size: 10px;
+}
+tr.row-open > td {
+  background: var(--surface-2);
+}
+.detail-row > td {
+  padding: 0 14px 14px;
+  background: var(--surface-2);
+}
+.detail-downloads {
+  display: flex;
+  gap: 8px;
+}
+.detail-downloads .btn-revoke {
+  margin-top: 0;
+}
+
 /* Honour reduced-motion preferences. */
 @media (prefers-reduced-motion: reduce) {
   * {

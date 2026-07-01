@@ -2,9 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import {
   getAccounts,
-  getAudit,
   getAuditChain,
-  getAuditVerify,
   getConnections,
   getReceipts,
   getSources,
@@ -12,12 +10,11 @@ import {
   grantConnection,
   revokeConnection,
 } from "../api.js";
-import AuditTable from "../components/AuditTable.jsx";
+import ActivityLog from "../components/ActivityLog.jsx";
 import ChainVerifier from "../components/ChainVerifier.jsx";
 import ConnectForm from "../components/ConnectForm.jsx";
 import ConnectionCard from "../components/ConnectionCard.jsx";
 import PermissionSimulator from "../components/PermissionSimulator.jsx";
-import ReceiptList from "../components/ReceiptList.jsx";
 import { SkeletonCard } from "../components/Skeleton.jsx";
 import { useToast } from "../components/Toaster.jsx";
 
@@ -36,8 +33,6 @@ export default function ConsentPage({ scopeCatalog }) {
   const [connections, setConnections] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [transactions, setTransactions] = useState([]);
-  const [audit, setAudit] = useState([]);
-  const [verification, setVerification] = useState(null);
   const [chain, setChain] = useState(null);
   const [receipts, setReceipts] = useState(null);
   const [sources, setSources] = useState([]);
@@ -46,20 +41,16 @@ export default function ConsentPage({ scopeCatalog }) {
   const [busy, setBusy] = useState(false);
 
   const refresh = useCallback(async () => {
-    const [conns, accts, txns, events, verify, chainData, receiptData] = await Promise.all([
+    const [conns, accts, txns, chainData, receiptData] = await Promise.all([
       getConnections(),
       getAccounts(),
       getTransactions(),
-      getAudit(),
-      getAuditVerify(),
       getAuditChain(),
       getReceipts(),
     ]);
     setConnections(conns);
     setAccounts(accts);
     setTransactions(txns);
-    setAudit(events);
-    setVerification(verify);
     setChain(chainData);
     setReceipts(receiptData);
   }, []);
@@ -171,25 +162,16 @@ export default function ConsentPage({ scopeCatalog }) {
           </section>
 
           <section>
-            <h2>Traceability log</h2>
+            <h2>Activity log</h2>
             <p className="section-note">
-              Every access to your data is recorded — allowed or denied — and tied to the consent
-              that permitted it.
+              Every access is recorded — allowed or denied — tied to the grant that permitted it.
+              Expand any row for the full receipt; tick rows and export the selection.
             </p>
             {loading ? (
               <SkeletonCard lines={6} />
             ) : (
-              <AuditTable events={audit} catalog={scopeCatalog} verification={verification} />
+              <ActivityLog receipts={receipts} catalog={scopeCatalog} />
             )}
-          </section>
-
-          <section>
-            <h2>Access receipts</h2>
-            <p className="section-note">
-              The same record, made legible: each access as a receipt — who, what, under which
-              grant, disclosed vs withheld — with a downloadable JSON copy.
-            </p>
-            {loading ? <SkeletonCard lines={6} /> : <ReceiptList receipts={receipts} />}
           </section>
         </>
       )}
