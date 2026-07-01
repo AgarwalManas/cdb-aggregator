@@ -8,8 +8,9 @@ import ComparePage from "./pages/ComparePage.jsx";
 import ConsentPage from "./pages/ConsentPage.jsx";
 import CredentialsPage from "./pages/CredentialsPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
-import ExplainerPage from "./pages/ExplainerPage.jsx";
 import OverviewPage from "./pages/OverviewPage.jsx";
+import PrinciplesPage from "./pages/PrinciplesPage.jsx";
+import WhySaferPage from "./pages/WhySaferPage.jsx";
 
 // Each page: its sidebar group, nav label, and the header title/subtitle.
 const PAGES = {
@@ -135,18 +136,8 @@ export default function App() {
           {page === "address" && <AddressPage />}
           {page === "credentials" && <CredentialsPage />}
           {page === "compare" && <ComparePage />}
-          {page === "safer" && (
-            <ExplainerPage
-              title="Why this is safer"
-              blurb="The case for scoped, revocable, token-based access over shared credentials."
-            />
-          )}
-          {page === "principles" && (
-            <ExplainerPage
-              title="Consent principles"
-              blurb="Control, Access, Transparency, Traceability, Security — the ideas the app is built on."
-            />
-          )}
+          {page === "safer" && <WhySaferPage onNavigate={setPage} />}
+          {page === "principles" && <PrinciplesPage onNavigate={setPage} />}
 
           <footer className="foot">
             cdb-aggregator · FDX-aligned consent &amp; traceability demo

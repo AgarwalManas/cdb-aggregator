@@ -233,12 +233,38 @@ code {
   padding: 40px 32px 64px;
 }
 
-/* Stub pages (Dashboard hub + explainer placeholders) until slices 2–4 land. */
-.stub-hero {
-  margin-bottom: 20px;
+/* How-it-works explainer pages (slice 4). */
+.explain-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
 }
-.stub-hero h2 {
-  margin: 0 0 6px;
+.explain-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.explain-card h3 {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 15px;
+}
+.explain-card .link {
+  align-self: flex-start;
+  margin-top: auto;
+}
+.explain-num {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-tint);
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
 }
 /* Dashboard (slice 2) */
 .dash-hint {
