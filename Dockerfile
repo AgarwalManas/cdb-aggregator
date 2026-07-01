@@ -36,9 +36,11 @@ ENV CDB_FRONTEND_DIST=/app/frontend/dist \
     CDB_ENVIRONMENT=production \
     CDB_DEBUG=false
 
-# The platform injects $PORT; default to 8000 for plain `docker run`.
-ENV PORT=8000
+# The host (Render, etc.) injects $PORT at runtime and routes traffic to it, so
+# bind to whatever it sets. Do NOT hard-pin PORT via ENV — that can shadow the
+# injected value, leaving the app on the wrong port and unreachable. Fall back
+# to 8000 only for a plain local `docker run`.
 EXPOSE 8000
 
 # Shell form so ${PORT} is expanded at container start.
-CMD uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port ${PORT}
+CMD uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port ${PORT:-8000}
