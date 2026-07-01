@@ -18,22 +18,23 @@ fully-logged** task to an AI agent.
 
 ## Try it live
 
-The whole app — API **and** UI — runs as a single service, so it deploys to one
-public URL with continuous deployment: **every push redeploys the latest code**,
-so the link always serves what's on `main`.
+### ▶ **[cdb-aggregator.onrender.com](https://cdb-aggregator.onrender.com)**
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/AgarwalManas/cdb-aggregator)
+The whole app — API **and** UI — runs as a single service on one public URL.
 
-Clicking the button reads [`render.yaml`](render.yaml), builds the
-[`Dockerfile`](Dockerfile) (compiles the React app, then serves it from FastAPI),
-and stands up a live URL. Because `autoDeploy` is on, later pushes redeploy
-automatically — change something today and the link reflects it on the next push,
-no manual step.
+> **First load takes ~2–3 minutes.** It's on a free tier that sleeps when idle, so
+> the first request has to wake and start the container (you'll see a "waking up"
+> screen — give it a couple of minutes and refresh). Subsequent visits are instant
+> until it idles again.
+
+Continuous deployment is on: **every push to `main` redeploys the latest code**, so
+the link always serves what's current — [`render.yaml`](render.yaml) +
+[`Dockerfile`](Dockerfile) build the React app and serve it from FastAPI.
 
 > Honest scope, same as everywhere else here: it's seeded with **demo data** and
-> in-memory state, there's no login, and the free tier **cold-starts after idle**
-> (the first hit takes a few seconds to wake). It demonstrates the architecture;
-> it isn't a live integration with any real bank.
+> in-memory state (each visitor gets their own sandbox — there's a **Reset demo**
+> button), there's no login. It demonstrates the architecture; it isn't a live
+> integration with any real bank.
 
 Prefer to run it yourself? One command with Docker, or the from-source
 [Quickstart](#quickstart) below:
