@@ -15,6 +15,67 @@ order, each landing as a tagged commit so history stays a navigable timeline.
 
 ---
 
+## Status & next steps
+
+**Done:** items 15–27 — the full UI refinement track (design system, dark mode, log
+controls, states, minimization signature, screen-scraping visual, accessibility) and
+the full hardening track (hash-chained audit log, FAPI, property-based tests, SQLite
+persistence, threat model, FDX schema conformance).
+
+**Next:** the sanity checkpoint below, then **item-28 onward** (Track 3).
+
+### SC — Sanity checkpoint (do this FIRST, before item-28)
+
+Thirteen items of change — including SQLite persistence (item-25) and the hash chain
+(item-22), both of which touch the audit path — is exactly the kind of run where
+something drifts. Confirm the project is green and deployable before adding more. This is
+a gate, not a build item (no tag); commit any fixes as normal (`fix: …`).
+
+- [ ] **CI green on `main`.** The latest `ci.yml` run passes: ruff lint + format, backend
+  tests, the 100% coverage gate, and the frontend build.
+- [ ] **Tests pass locally** at full coverage: `pytest --cov=app --cov-fail-under=100`.
+- [ ] **Lint/format clean:** `ruff check .` and `ruff format --check .`.
+- [ ] **Frontend builds:** `cd frontend && npm install && npm run build`.
+- [ ] **One-service boot works:** build the UI and serve it from FastAPI; confirm the app
+  serves the UI, the API under `/api`, and `/docs` on one port.
+- [ ] **Audit path intact end-to-end** after SQLite + hash chain: grant a consent → do a
+  read → revoke → confirm the audit entries are written, the hash chain still verifies,
+  and data survives a restart (SQLite durability).
+- [ ] **Live demo deploys** and the public URL serves current `main` (allow for the free
+  tier's cold-start).
+- [ ] **Tags present:** `git tag` shows `item-15` … `item-27`, each pushed.
+- [ ] **Fix anything red before proceeding.** Do not start item-28 with a failing gate.
+
+**Kickoff prompt:**
+> cdb-aggregator, **sanity checkpoint before item-28 — do not build a feature**. Verify
+> the project is green and deployable after items 15–27. Run: `ruff check .` and
+> `ruff format --check .`; `pytest --cov=app --cov-fail-under=100`; and a frontend build
+> (`cd frontend && npm install && npm run build`). Boot the one-service mode (UI served by
+> FastAPI) and confirm the UI, the API under `/api`, and `/docs` all respond. Exercise the
+> audit path end-to-end: grant a consent → do a read → revoke → confirm audit entries are
+> written, the hash chain verifies, and data survives a restart (SQLite durability).
+> Confirm the latest `ci.yml` run on `main` is green, the live demo serves current `main`,
+> and `git tag` shows `item-15` … `item-27`. Report anything red and fix it with a `fix:`
+> commit before we start item-28.
+
+### Remaining order (after SC)
+
+1. **item-28 — agent activity & authority console** (Track 3 standout; builds on Item 11).
+2. **item-31 — portable alias + consent-gated resolver** (Track 3 standout; the
+   route-on-a-lookup / portable-address feature).
+3. **item-30 — user-verifiable audit log** (cheap now — item-22's hash chain exists).
+4. **item-29 — access receipts + permission simulation** (pairs with item-17).
+5. **item-32, item-33 — simulated selective-disclosure + VC wallet** (optional; keep
+   clearly labelled as simulations).
+
+### Housekeeping (independent of the above)
+
+- [x] **Neutralize the `docs/` folder for public view.** Done: `docs/research-report.md`
+  and `docs/build-todo.md` replaced with the neutral versions, employer-specific language
+  stripped repo-wide (incl. code comments), and `docs/blog-post.md` removed.
+
+---
+
 ## DESIGN BRIEF (read before any UI item — this governs the whole UI track)
 
 **Subject & job.** A Consumer-Driven Banking aggregator whose real product is
@@ -256,9 +317,163 @@ actual standard, not a hand-rolled approximation of it.
 
 ---
 
-## Suggested order
+## Track 3 — Advanced / consent-frontier features
+
+Higher-effort, forward-looking features that extend the consent + traceability thesis
+onto the screen. **item-28 to item-31 are buildable on the current mock/in-memory
+stack; item-32 and item-33 are staged** — simulated and clearly labelled as such until
+real integrations exist. Standards named below are alignment targets, not claims of
+certification. (Two smaller touches from the same research — consent expiry/renewal
+countdowns and a small source→adapter→gate→screen data-flow animation — are best folded
+into item-18 and item-19 rather than built as separate items.)
+
+### [ ] item-28 — Agent activity & authority console
+**Produces:** a live view of the delegated agent acting under a scoped grant — a
+real-time action feed (each row: intent, the field/account read, the grant that
+authorized it, timestamp, status); an **authority card** (agent identity, scope held,
+time remaining, Pause / Revoke now); and an **approval queue** for suggestion-only
+actions (Approve / Reject / Request changes). Includes an **intent → scope preview**:
+before a grant is minted, show exactly what the agent will and won't be able to see.
+Revoking must halt the feed immediately.
+**Why:** makes delegated authority a first-class, visible, revocable object rather than
+an opaque background process; extends the agent feature (Item 11) with real-time
+accountability. Aligns with FDX's Agentic AI guiding principles (agent identity, consent
+delegation, data minimization, downstream accountability, traceability).
+**Depends on:** the agent feature (Item 11) and the consent gate (Item 7).
+**Align with:** FDX Agentic AI principles; OAuth 2.0 token exchange (RFC 8693, `act` claim).
+**Kickoff prompt:**
+> cdb-aggregator, **item-28 — agent activity & authority console**. Read the agent
+> (Item 11) and consent code. Add a live action feed (intent, field read, authorizing
+> grant, timestamp, status) over SSE or polling; an authority card (identity, scope,
+> time remaining, Pause/Revoke); an approval queue for suggestion-only actions; and an
+> intent→scope preview before granting. Revoke halts the feed immediately. Keep 100%
+> backend coverage, CI green.
+> Commit `Item 28 — agent activity and authority console`, tag `item-28`, push.
+
+### [ ] item-29 — Access receipts + permission simulation
+**Produces:** (a) an **access receipt** for every read — who accessed, what field/cluster,
+the authorizing grant, purpose, timestamp, what was disclosed vs withheld, and a short
+"why this was accessed" line — as a scrollable receipt history with a per-receipt detail
+view and a machine-readable JSON export; (b) a **permission simulation** that previews,
+before granting, exactly which fields a candidate scope would expose vs. withhold,
+computed against the mock data.
+**Why:** turns the audit log into a consumer-legible artifact and turns consent from a
+blind checkbox into an informed preview — direct expressions of transparency and
+minimization.
+**Depends on:** the audit log + minimization (Item 8); pairs with the log UI (item-17).
+**Align with:** ISO/IEC TS 27560 (consent-receipt structure); Kantara Consent Receipt.
+**Kickoff prompt:**
+> cdb-aggregator, **item-29 — access receipts + permission simulation**. Render each
+> audit entry as an access receipt (who, what field/cluster, authorizing grant, purpose,
+> disclosed vs withheld, a "why accessed" line) with a detail view and JSON export. Add a
+> permission simulator that, for a candidate scope, shows which fields would be visible
+> vs withheld against the mock data. Match the design foundation; keep coverage at 100%.
+> Commit `Item 29 — access receipts and permission simulation`, tag `item-29`, push.
+
+### [ ] item-30 — User-verifiable audit log (in-browser)
+**Produces:** on top of item-22's hash chain, a published **chain head** (latest hash)
+and a **"Verify integrity"** control in the traceability view that recomputes the chain
+in-browser (Web Crypto) and reports intact / tampered, plus a "download log + proof"
+export so the chain can be checked independently. Optionally sign the chain head with a
+demo key.
+**Why:** moves the audit log from append-only *by assertion* to append-only *the user
+can verify themselves* — the visible payoff of item-22.
+**Depends on:** the hash-chained log (item-22) and the log UI (item-17).
+**Align with:** RFC 6962 (transparency-log construction); ISO/IEC 27560 for the record shape.
+**Kickoff prompt:**
+> cdb-aggregator, **item-30 — user-verifiable audit log**. Using item-22's hash chain,
+> publish the chain head and add a "Verify integrity" control that recomputes the chain
+> in-browser via Web Crypto and shows intact/tampered, plus a "download log + proof"
+> export. Optionally sign the chain head with a demo key. Test the verifier against a
+> tampered fixture. Keep coverage at 100%.
+> Commit `Item 30 — user-verifiable audit log`, tag `item-30`, push.
+
+### [ ] item-31 — Portable account alias + consent-gated resolver
+**Produces:** a bank-neutral **alias** the user owns (e.g. `name.cdb`) plus a **resolver**
+mapping it to current account coordinates, with four properties: (1) resolution is
+**consent-gated** — a lookup returns nothing without an active, in-scope grant; (2) the
+resolver returns a **one-time routing token**, never the raw institution/transit/account,
+so a counterparty never learns the user's bank or branch; (3) **re-pointing** the alias to
+a different (mock) source is a scoped, logged event — portability expressed as a consent
+action; (4) every resolution, allowed or denied, is written to the traceability trail.
+UI: a **"portable address" card** — current routing target, a change-bank action, and
+"who resolved this, when, and what they were told."
+**Why:** demonstrates the "route on a lookup, not on the identifier" pattern (as used by
+mobile-number portability and alias-based payment schemes), applied with consent,
+minimization, and traceability. It reframes account portability and the account-number
+privacy leak as an addressing problem the consent layer already solves.
+**Depends on:** the consent gate (Item 7), the audit log (Item 8), and the canonical
+model (Item 2).
+**Scope note:** demonstrates the *addressing/portability pattern* on mock data. It does
+not move real money, is not a real central registry, and does not settle over any payment
+rail — the same honest-scope line the rest of the project draws.
+**Kickoff prompt:**
+> cdb-aggregator, **item-31 — portable alias + consent-gated resolver**. Add a
+> bank-neutral alias registry (handle → account) and a resolver endpoint that: returns
+> nothing without an active in-scope grant; returns a one-time routing token, never raw
+> institution/transit/account; treats re-pointing an alias to a different source as a
+> scoped, logged event; and writes every resolution (allowed or denied) to the audit
+> trail. Add a "portable address" card (current target, change bank, resolution history).
+> Document the scope limits (mock addressing only; no settlement). Keep coverage at 100%.
+> Commit `Item 31 — portable alias and consent-gated resolver`, tag `item-31`, push.
+
+### Staged (simulated — label clearly; graduate only with real integrations)
+
+### [ ] item-32 — Selective-disclosure attestation (simulated)
+**Produces:** a "prove without sharing" flow that issues a signed attestation of a
+derived fact (e.g. a threshold check such as *balance stayed non-negative for 90 days*)
+without exposing the underlying transactions — computed server-side from mock data and
+labelled clearly in-product as a simulation of zero-knowledge / selective disclosure.
+**Why:** demonstrates minimization taken to its limit — share a conclusion, not the data.
+**Depends on:** the canonical model (Item 2) and consent (Item 7).
+**Align with (target):** W3C Verifiable Credentials; IETF SD-JWT VC; OpenID for Verifiable
+Presentations (OID4VP).
+**Scope note:** the attestation is computed and signed server-side on mock data — a
+demonstration of the pattern, not a real zero-knowledge proof. Graduate to real SD-JWT VC
+/ range proofs only with real data and infrastructure.
+**Kickoff prompt:**
+> cdb-aggregator, **item-32 — simulated selective-disclosure attestation**. Add a flow
+> that issues a signed attestation of a derived fact (e.g. a threshold check) without
+> exposing the underlying transactions, computed server-side from mock data. Label it
+> clearly in-product as a simulation of zero-knowledge / selective disclosure, and
+> document what a real implementation would require. Keep coverage at 100%.
+> Commit `Item 32 — simulated selective-disclosure attestation`, tag `item-32`, push.
+
+### [ ] item-33 — Verifiable-credential wallet view (simulated)
+**Produces:** a holder-style wallet view where issuer-signed attestations derived from
+the user's (mock) financial data can be selectively presented to a verifier — a simulated
+wallet, clearly labelled.
+**Why:** demonstrates user-held, selectively-disclosed credentials — the direction open
+finance and digital-identity wallets are heading.
+**Depends on:** item-32.
+**Align with (target):** W3C Verifiable Credentials; OID4VCI / OID4VP; eIDAS 2.0 / EUDI
+wallet patterns.
+**Scope note:** a simulated wallet on mock data; not a real credential wallet or
+issuer/verifier deployment.
+**Kickoff prompt:**
+> cdb-aggregator, **item-33 — simulated VC wallet view**. Add a holder-style wallet view
+> presenting issuer-signed attestations (from item-32) selectively to a verifier, on mock
+> data, clearly labelled as a simulation. Document what real OID4VP/VC infrastructure
+> would require. Keep coverage at 100%.
+> Commit `Item 33 — simulated verifiable-credential wallet`, tag `item-33`, push.
+
+---
+
+## Dependency reference
+
+> Live status and the current working order are in **Status & next steps** at the top of
+> this file. This section records the underlying dependency rationale (why the order is
+> what it is), for reference.
+
 `item-15` (foundation — unblocks every UI item) → `item-22` (audit integrity) →
 `item-17` (log controls, now with the verified badge) → `item-19` (the signature) →
-`item-16`, `item-18`, `item-20` → `item-21` (final a11y sweep). Then `item-23`–`item-27`
-as depth allows. The design foundation and the hash chain are the two highest-leverage
-items; do those first.
+`item-16`, `item-18`, `item-20` → `item-21` (final a11y sweep).
+
+Then depth and frontier items as time allows: `item-23`–`item-27` (hardening and
+conformance), and Track 3. Within Track 3 the two standouts are **`item-28`** (agent
+activity & authority console) and **`item-31`** (portable alias + resolver);
+**`item-30`** builds directly on `item-22`, and **`item-29`** pairs with `item-17`. The
+simulated items (`item-32`, `item-33`) come last and must stay clearly labelled.
+
+The design foundation and the hash chain remain the two highest-leverage items; do those
+first.
