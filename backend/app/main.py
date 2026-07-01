@@ -19,7 +19,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app import __version__
-from app.api.routes import agent, aggregation, alias, comparison, consent, health, receipts
+from app.api.routes import (
+    agent,
+    aggregation,
+    alias,
+    attestation,
+    comparison,
+    consent,
+    health,
+    receipts,
+)
 from app.api.session import (
     COOKIE_MAX_AGE,
     SESSION_COOKIE,
@@ -83,6 +92,7 @@ def create_app() -> FastAPI:
     app.include_router(comparison.router)  # item-20: old-way vs new-way contrast
     app.include_router(alias.router)  # item-31: portable alias + consent-gated resolver
     app.include_router(receipts.router)  # item-29: access receipts + permission simulation
+    app.include_router(attestation.router)  # item-32: selective-disclosure attestation (sim)
 
     dist = _frontend_dist(settings.frontend_dist)
     if dist is None:

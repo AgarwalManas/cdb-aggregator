@@ -1225,6 +1225,58 @@ button:disabled {
   margin-top: 0;
 }
 
+/* Selective-disclosure attestations (item-32) + VC wallet (item-33) — simulated */
+.sim-banner {
+  background: var(--surface-2);
+  border: 1px dashed var(--hairline);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+.proof-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+.proof {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.proof h3 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.proof .btn-primary {
+  align-self: flex-start;
+}
+.attestation {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--hairline);
+  padding-top: 10px;
+}
+.attest-claim {
+  font-weight: 600;
+  font-size: 13.5px;
+}
+.proof-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.proof-actions button {
+  flex: 1;
+  min-width: 140px;
+  margin-top: 0;
+}
+
 /* An error stands out by contrast and weight, not by a new colour. */
 .error {
   background: var(--surface-2);

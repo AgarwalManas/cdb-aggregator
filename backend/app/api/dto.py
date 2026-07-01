@@ -407,3 +407,44 @@ class PermissionSimulationView(ApiModel):
     scopes: list[ConsentScope]
     visible: list[FieldView]
     withheld: list[FieldView]
+
+
+# --- Selective-disclosure attestations (item-32, simulated) ------------------
+
+
+class FactView(ApiModel):
+    """A fact you can prove without sharing the underlying data."""
+
+    fact_id: str
+    question: str
+    disclosure: str
+
+
+class AttestationView(ApiModel):
+    """A signed attestation of a derived fact — the conclusion, not the data."""
+
+    fact_id: str
+    question: str
+    claim: str
+    holds: bool
+    subject: str
+    issuer: str
+    issued_at: str  # isoformat string, exactly as signed
+    algorithm: str
+    key_id: str
+    disclosure: str
+    signature: str
+    simulated: bool = True  # this is a demonstration, not a real ZK proof
+
+
+class IssueAttestationRequest(ApiModel):
+    fact_id: str
+
+
+class VerifyAttestationRequest(ApiModel):
+    attestation: AttestationView
+
+
+class AttestationVerificationView(ApiModel):
+    valid: bool
+    reason: str

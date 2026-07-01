@@ -32,6 +32,21 @@ export const simulatePermissions = (scopes) =>
     body: JSON.stringify({ scopes }),
   });
 
+// Selective-disclosure attestations (item-32, simulated)
+export const getAttestationCatalog = () => request("/attestations/catalog");
+export const issueAttestation = (factId) =>
+  request("/attestations/issue", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ factId }),
+  });
+export const verifyAttestation = (attestation) =>
+  request("/attestations/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ attestation }),
+  });
+
 // Aggregation (Item 10)
 export const getAccounts = () => request("/accounts");
 export const getTransactions = () => request("/transactions");

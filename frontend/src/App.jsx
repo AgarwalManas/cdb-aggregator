@@ -6,6 +6,7 @@ import AddressPage from "./pages/AddressPage.jsx";
 import AgentPage from "./pages/AgentPage.jsx";
 import ComparePage from "./pages/ComparePage.jsx";
 import ConsentPage from "./pages/ConsentPage.jsx";
+import CredentialsPage from "./pages/CredentialsPage.jsx";
 import OverviewPage from "./pages/OverviewPage.jsx";
 
 const TABS = {
@@ -29,6 +30,10 @@ const TABS = {
     title: "Portable address",
     subtitle: "A bank-neutral handle you own — resolved to a one-time token, never your account.",
   },
+  credentials: {
+    title: "Credentials & proofs",
+    subtitle: "Prove a fact without sharing the data behind it — a selective-disclosure simulation.",
+  },
 };
 
 // Tab order and the (shorter) labels shown in the nav.
@@ -38,6 +43,7 @@ const NAV = [
   ["assistant", "Assistant"],
   ["compare", "Old vs New"],
   ["address", "Portable address"],
+  ["credentials", "Credentials"],
 ];
 
 export default function App() {
@@ -106,6 +112,7 @@ export default function App() {
       {tab === "assistant" && <AgentPage scopeCatalog={scopeCatalog} />}
       {tab === "compare" && <ComparePage />}
       {tab === "address" && <AddressPage />}
+      {tab === "credentials" && <CredentialsPage />}
 
       <footer className="foot">cdb-aggregator · FDX-aligned consent &amp; traceability demo</footer>
     </div>
