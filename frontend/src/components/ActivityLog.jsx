@@ -110,48 +110,65 @@ function toMarkdown(rows, enhanced) {
 function printPdf(rows, enhanced, meta) {
   const win = window.open("", "_blank");
   if (!win) return;
-  const head = COLUMNS.map((c) => `<th>${c}</th>`).join("");
-  const body = rows
+  const fmt = (iso) =>
+    new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+  const blocks = rows
     .map((r) => {
-      const s = summaryRow(r);
-      const cells = COLUMNS.map((c) => `<td>${esc(s[c])}</td>`).join("");
-      const detail = enhanced
-        ? `<tr class="d"><td colspan="${COLUMNS.length}"><b>Accessor:</b> ${esc(r.accessor)} &nbsp; <b>Why:</b> ${esc(r.why)} &nbsp; <b>Fields:</b> ${esc(r.fields.join(", "))}</td></tr>`
-        : "";
-      return `<tr>${cells}</tr>${detail}`;
+      const saw = r.allowed
+        ? `${esc(r.fields.join(", ") || "—")} <span class="dim">· ${r.recordCount} record${r.recordCount === 1 ? "" : "s"}</span>`
+        : "Nothing — the request was blocked";
+      const note = enhanced ? `<tr><td>System note</td><td>“${esc(r.why)}”</td></tr>` : "";
+      return `
+      <div class="r">
+        <div class="r-head">
+          <span class="r-badge ${r.allowed ? "ok" : "no"}">${r.allowed ? "Allowed" : "Denied"}</span>
+          <span class="r-title">${esc(r.clusterLabel)}${r.accountId ? ` · ${esc(r.accountId)}` : ""}</span>
+          <span class="r-when">${fmt(r.occurredAt)} · ${esc(r.receiptId)}</span>
+        </div>
+        <table class="kv">
+          <tr><td>Who accessed it</td><td>${esc(r.accessorLabel)} <span class="dim">(${esc(r.accessor)})</span></td></tr>
+          <tr><td>Purpose</td><td>${esc(r.purpose)}</td></tr>
+          <tr><td>What they saw</td><td>${saw}</td></tr>
+          <tr><td>Kept private</td><td>${esc(r.withheld.join(", ")) || "Nothing withheld"}</td></tr>
+          <tr><td>Authority</td><td>Grant ${esc(r.authorizingConsentId || "—")}</td></tr>
+          ${note}
+        </table>
+      </div>`;
     })
     .join("");
-  const single = rows.length === 1 ? rows[0] : null;
-  const accounts = [...new Set(rows.map((r) => r.accountId).filter(Boolean))];
   const metaRows = [
     ["Account holder", meta.holder],
     ["Generated", meta.generated],
-    ["Records", String(rows.length)],
-    single ? ["Receipt", single.receiptId] : null,
-    single ? ["Account", single.accountId || "—"] : ["Accounts", accounts.join(", ") || "—"],
+    ["Access records", String(rows.length)],
   ]
-    .filter(Boolean)
     .map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`)
     .join("");
   win.document.write(
-    `<html><head><title>CDB Aggregator — access log</title><style>
-      body{font-family:system-ui,-apple-system,sans-serif;color:#1a1f2b;padding:40px;font-size:12px}
+    `<html><head><title>CDB Aggregator — access receipts</title><style>
+      body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#1a1f2b;padding:44px 48px;font-size:12.5px;line-height:1.5}
       .lh{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #10695C;padding-bottom:12px;margin-bottom:16px}
       .brand{font-size:20px;font-weight:700;font-family:ui-monospace,monospace;color:#10695C}
       .doc{font-size:13px;color:#555}
-      table.meta{border-collapse:collapse;margin-bottom:18px;font-size:12px}
+      table.meta{border-collapse:collapse;margin-bottom:22px;font-size:12px}
       table.meta td{padding:2px 22px 2px 0}
       table.meta td:first-child{color:#888}
-      table.log{border-collapse:collapse;width:100%}
-      table.log th,table.log td{border:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top}
-      table.log th{background:#f4f6f8;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#555}
-      tr.d td{background:#fafbfc;font-size:11px;color:#444}
-      .foot{margin-top:20px;font-size:10px;color:#999}
+      .r{border:1px solid #e2e6e4;border-radius:10px;padding:14px 18px;margin-bottom:12px;page-break-inside:avoid}
+      .r-head{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
+      .r-badge{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:2px 9px}
+      .r-badge.ok{color:#10695C;background:#e2efec}
+      .r-badge.no{color:#555;background:#ececec}
+      .r-title{font-weight:600;font-size:13.5px}
+      .r-when{margin-left:auto;color:#888;font-size:11px}
+      table.kv{border-collapse:collapse;width:100%}
+      table.kv td{padding:3px 0;vertical-align:top}
+      table.kv td:first-child{color:#888;width:140px;padding-right:16px;white-space:nowrap}
+      .dim{color:#888}
+      .foot{margin-top:22px;font-size:10px;color:#999}
     </style></head><body>
-      <div class="lh"><div class="brand">CDB Aggregator</div><div class="doc">Access log — receipts</div></div>
+      <div class="lh"><div class="brand">CDB Aggregator</div><div class="doc">Access receipts — who saw your data, and why</div></div>
       <table class="meta">${metaRows}</table>
-      <table class="log"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
-      <div class="foot">FDX-aligned consent &amp; traceability demo · Demo data — not a statement of live regulatory integration.</div>
+      ${blocks}
+      <div class="foot">Every access is recorded against the grant that permitted it. FDX-aligned consent &amp; traceability demo · Demo data — not a statement of live regulatory integration.</div>
     </body></html>`,
   );
   win.document.close();
@@ -359,7 +376,7 @@ export default function ActivityLog({ receipts, holder = "Ada Lovelace" }) {
         {selected.size
           ? `${selected.size} selected for export.`
           : "Tick rows to export a selection, or export everything shown."}{" "}
-        Enhanced adds each receipt&apos;s fields and the &ldquo;why&rdquo; line.
+        Enhanced adds each receipt&apos;s system note.
       </p>
 
       {receipts.length === 0 ? (
@@ -479,82 +496,125 @@ function LogRow({ receipt: r, open, selected, enhanced, meta, menuOpen, onMenu, 
         <tr className="detail-row">
           <td colSpan={11}>
             <div className="receipt-full">
-              <div className="rf-head">
-                <span>
-                  📄 Receipt <code>{r.receiptId}</code>
+              <div className="rf-top">
+                <span className="rf-id">
+                  <Icon name="fileCheck" /> Receipt <code>{r.receiptId}</code>
                 </span>
-                <span className="muted">Occurred at {r.occurredAt}</span>
+                <div className="js-menu rf-download">
+                  <button type="button" className="btn-revoke" onClick={() => onMenu(!menuOpen)}>
+                    <Icon name="download" /> Download ▾
+                  </button>
+                  {menuOpen && (
+                    <div className="export-menu" role="menu">
+                      {EXPORT_OPTS.map(([label, kind]) => (
+                        <button
+                          key={kind}
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            runExport(kind, [r], enhanced, meta);
+                            onMenu(false);
+                          }}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="rf-grid">
-                <RfCol
-                  items={[
-                    ["Accessor", r.accessor],
-                    ["Accessor label", r.accessorLabel],
-                    ["Accessor type", r.accessorType],
-                    ["Purpose", r.purpose],
-                  ]}
-                />
-                <RfCol
-                  items={[
-                    ["Cluster", r.cluster],
-                    ["Cluster label", r.clusterLabel],
-                    ["Fields", r.fields.join(", ") || "—"],
-                  ]}
-                />
-                <RfCol
-                  items={[
-                    ["Account ID", r.accountId || "—"],
-                    ["Authorizing grant", r.authorizingConsentId || "—"],
-                    ["Allowed", String(r.allowed)],
-                    ["Record count", String(r.recordCount)],
-                  ]}
-                />
-                <RfCol
-                  items={[
-                    ["Withheld", r.withheld.length ? r.withheld.join(", ") : "none"],
-                    ["Why", r.why],
-                  ]}
-                />
-              </div>
-              <div className="js-menu rf-download">
-                <button type="button" className="btn-revoke" onClick={() => onMenu(!menuOpen)}>
-                  <Icon name="download" /> Download ▾
-                </button>
-                {menuOpen && (
-                  <div className="export-menu" role="menu">
-                    {EXPORT_OPTS.map(([label, kind]) => (
-                      <button
-                        key={kind}
-                        type="button"
-                        role="menuitem"
-                        onClick={() => {
-                          runExport(kind, [r], enhanced, meta);
-                          onMenu(false);
-                        }}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
+
+              <p className="rf-lead">
+                {r.allowed ? (
+                  <>
+                    <strong>{r.accessorLabel}</strong> read your{" "}
+                    <strong>{r.clusterLabel.toLowerCase()}</strong>
+                    {r.accountId && (
+                      <>
+                        {" "}
+                        for <code>{r.accountId}</code>
+                      </>
+                    )}{" "}
+                    on {formatDateTime(r.occurredAt)} — allowed by grant{" "}
+                    <code>{r.authorizingConsentId}</code>.
+                  </>
+                ) : (
+                  <>
+                    <strong>{r.accessorLabel}</strong> asked for your{" "}
+                    <strong>{r.clusterLabel.toLowerCase()}</strong>
+                    {r.accountId && (
+                      <>
+                        {" "}
+                        on <code>{r.accountId}</code>
+                      </>
+                    )}{" "}
+                    on {formatDateTime(r.occurredAt)} — <strong>denied</strong>, because no active
+                    grant covered it.
+                  </>
                 )}
+              </p>
+
+              <div className="rf-grid">
+                <div className="rf-sec">
+                  <h5>What they saw</h5>
+                  {r.allowed ? (
+                    <>
+                      <span className="rf-chips">
+                        {r.fields.map((f) => (
+                          <span key={f} className="chip">
+                            {f}
+                          </span>
+                        ))}
+                      </span>
+                      <span className="muted">
+                        {r.recordCount} record{r.recordCount === 1 ? "" : "s"} returned
+                      </span>
+                    </>
+                  ) : (
+                    <span className="muted">Nothing — the request was blocked.</span>
+                  )}
+                </div>
+
+                <div className="rf-sec">
+                  <h5>Kept private</h5>
+                  {r.withheld.length ? (
+                    <>
+                      <span className="rf-chips">
+                        {r.withheld.map((w) => (
+                          <span key={w} className="chip withheld">
+                            {w}
+                          </span>
+                        ))}
+                      </span>
+                      <span className="muted">Not covered by your grant, so never returned.</span>
+                    </>
+                  ) : (
+                    <span className="muted">Nothing was withheld from this read.</span>
+                  )}
+                </div>
+
+                <div className="rf-sec">
+                  <h5>Under what authority</h5>
+                  <span>
+                    Grant <code>{r.authorizingConsentId || "—"}</code> · purpose “{r.purpose}”
+                  </span>
+                  <span className="muted">
+                    Requested by {r.accessorLabel.toLowerCase()} ({r.accessor})
+                  </span>
+                </div>
+
+                <div className="rf-sec">
+                  <h5>System note</h5>
+                  <span className="rf-why">“{r.why}”</span>
+                  <span className="muted">
+                    Written automatically when the access happened — part of the signed receipt.
+                  </span>
+                </div>
               </div>
             </div>
           </td>
         </tr>
       )}
     </>
-  );
-}
-
-function RfCol({ items }) {
-  return (
-    <dl className="rf-col">
-      {items.map(([k, v]) => (
-        <div key={k}>
-          <dt>{k}</dt>
-          <dd>{v}</dd>
-        </div>
-      ))}
-    </dl>
   );
 }

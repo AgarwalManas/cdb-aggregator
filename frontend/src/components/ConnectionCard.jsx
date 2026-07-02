@@ -7,6 +7,8 @@ import ScopeChip from "./ScopeChip.jsx";
 // One connected data source: status, scopes, expiry, one-tap revoke — and an
 // expandable preview of exactly what it can access, illustrated with the real
 // (consent-gated) sample data: a sample account and a sample transaction.
+const STATUS_LABEL = { GRANTED: "Active", REVOKED: "Revoked", EXPIRED: "Expired" };
+
 export default function ConnectionCard({
   connection,
   catalog,
@@ -34,13 +36,20 @@ export default function ConnectionCard({
           <span className="conn-caret" aria-hidden="true">
             {open ? "▾" : "▸"}
           </span>
-          <span className="conn-title">
-            <strong>{connection.sourceLabel}</strong>
-            <span className={`badge status-${status}`}>{connection.status}</span>
+          <span className="bank-tile sm" aria-hidden="true">
+            {connection.sourceLabel.charAt(0)}
           </span>
-          <span className="conn-sub">
-            {expiryLabel(connection)} · {connection.accountIds.length} account
-            {connection.accountIds.length === 1 ? "" : "s"}
+          <span className="conn-name">
+            <span className="conn-title">
+              <strong>{connection.sourceLabel}</strong>
+              <span className={`badge status-${status}`}>
+                {STATUS_LABEL[connection.status] || connection.status}
+              </span>
+            </span>
+            <span className="conn-sub">
+              {expiryLabel(connection)} · {connection.accountIds.length} account
+              {connection.accountIds.length === 1 ? "" : "s"}
+            </span>
           </span>
         </button>
         {canRevoke ? (

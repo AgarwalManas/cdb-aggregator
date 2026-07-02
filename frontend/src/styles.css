@@ -147,8 +147,8 @@ input[type="radio"] {
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 4px 8px;
+  gap: 8px;
+  padding: 4px 4px 4px 8px;
 }
 .brand-mark {
   width: 26px;
@@ -160,8 +160,9 @@ input[type="radio"] {
 .brand-name {
   font-family: var(--font-mono);
   font-weight: 600;
-  font-size: 15px;
+  font-size: 13.5px;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 .side-nav {
   display: flex;
@@ -2463,8 +2464,7 @@ button:disabled {
 }
 .conn-toggle {
   flex: 1;
-  display: grid;
-  grid-template-columns: auto auto 1fr;
+  display: flex;
   align-items: center;
   gap: 12px;
   background: none;
@@ -2477,6 +2477,19 @@ button:disabled {
 .conn-caret {
   color: var(--muted);
   font-size: 11px;
+  flex: none;
+}
+.bank-tile.sm {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  font-size: 14px;
+}
+.conn-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 .conn-title {
   display: flex;
@@ -2843,44 +2856,76 @@ tr.row-open > td {
 .receipt-full {
   padding: 4px 2px 6px;
 }
-.rf-head {
+/* The expanded receipt: a mono ID row, a plain-English lead, then four
+   labelled facts — saw / kept private / authority / system note. */
+.rf-top {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-start;
   gap: 12px;
   flex-wrap: wrap;
   border-bottom: 1px solid var(--hairline);
   padding-bottom: 8px;
   margin-bottom: 12px;
+}
+.rf-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--font-mono);
   font-size: 12.5px;
+  color: var(--muted);
+  padding-top: 8px;
+}
+.rf-id svg {
+  width: 15px;
+  height: 15px;
+  color: var(--accent);
+}
+.rf-lead {
+  margin: 0 0 16px;
+  font-family: var(--font-sans, inherit);
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 78ch;
 }
 .rf-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
 }
-.rf-col {
+.rf-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 12.5px;
+  font-family: var(--font-sans, inherit);
+  min-width: 0;
+}
+.rf-sec h5 {
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.rf-col > div {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.rf-col dt {
-  font-size: 11px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--muted);
 }
-.rf-col dd {
-  margin: 0;
-  font-size: 12.5px;
-  font-family: var(--font-mono);
-  word-break: break-word;
+.rf-sec .muted {
+  font-size: 12px;
+}
+.rf-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.rf-chips .chip.withheld {
+  border-style: dashed;
+  color: var(--muted);
+}
+.rf-why {
+  font-style: italic;
+  color: var(--ink-soft);
 }
 .rf-download {
   display: inline-block;
@@ -2906,49 +2951,90 @@ tr.row-open > td {
   }
 }
 
-/* Collapsible sidebar: an icon-only rail; labels return as tooltips. */
+/* Collapsible sidebar: search + collapse live in the brand row (Claude-style);
+   collapsed, it becomes an icon-only rail and labels return as tooltips. */
 .sidebar {
   transition:
     width 0.25s ease,
     padding 0.25s ease;
 }
-.collapse-btn {
+.brand-actions {
+  margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 9px 10px;
+  gap: 2px;
+}
+.brand-btn {
+  padding: 5px;
   border: none;
   background: none;
-  border-radius: var(--radius-sm);
   color: var(--muted);
-  font-weight: 500;
-  text-align: left;
+  border-radius: var(--radius-sm);
+  display: grid;
+  place-items: center;
 }
-.collapse-btn:hover {
+.brand-btn:hover {
   background: var(--surface-2);
   color: var(--ink);
 }
-.collapse-btn svg {
-  width: 17px;
-  height: 17px;
+.brand-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.nav-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  padding: 8px 10px;
+  margin: -8px 4px 0;
+  color: var(--muted);
+}
+.nav-search svg {
+  width: 14px;
+  height: 14px;
   flex: none;
+}
+.nav-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+.nav-search input:focus {
+  outline: none;
+}
+.nav-empty {
+  margin: 0;
+  padding: 4px 10px;
+  color: var(--muted);
+  font-size: 13px;
 }
 .sidebar.collapsed {
   width: 66px;
   padding: 20px 10px;
 }
 .sidebar.collapsed .brand {
-  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
   padding: 4px 0;
+}
+.sidebar.collapsed .brand-actions {
+  margin-left: 0;
+  flex-direction: column;
+  gap: 6px;
 }
 .sidebar.collapsed .brand-name,
 .sidebar.collapsed .nav-label,
 .sidebar.collapsed .nav-heading {
   display: none;
 }
-.sidebar.collapsed .nav-item,
-.sidebar.collapsed .collapse-btn {
+.sidebar.collapsed .nav-item {
   justify-content: center;
   padding: 10px 0;
 }
@@ -2958,12 +3044,15 @@ tr.row-open > td {
 }
 @media (max-width: 900px) {
   /* The sidebar is a horizontal strip on small screens — collapsing doesn't apply. */
-  .side-foot {
+  .brand-actions {
     display: none;
   }
   .sidebar.collapsed {
     width: auto;
     padding: 14px 16px;
+  }
+  .sidebar.collapsed .brand {
+    flex-direction: row;
   }
   .sidebar.collapsed .brand-name,
   .sidebar.collapsed .nav-label {

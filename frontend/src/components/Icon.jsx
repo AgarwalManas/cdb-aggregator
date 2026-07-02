@@ -171,6 +171,18 @@ const ICONS = {
       <path d="M13 6l6 6-6 6" />
     </>
   ),
+  search: (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <path d="M16.5 16.5L21 21" />
+    </>
+  ),
+  panel: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2.5" />
+      <line x1="9.5" y1="4" x2="9.5" y2="20" />
+    </>
+  ),
   calendar: (
     <>
       <rect x="4" y="5" width="16" height="16" rx="2" />
