@@ -141,7 +141,6 @@ export default function ConsentPage({ scopeCatalog }) {
 
           {!loading && sources.length > 0 && (
             <section>
-              <h2>Connect a source</h2>
               <ConnectForm
                 sources={sources}
                 scopeCatalog={scopeCatalog}

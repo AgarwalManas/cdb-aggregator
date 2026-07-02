@@ -93,12 +93,6 @@ export default function AgentPage({ scopeCatalog }) {
     <>
       {error && <div className="error">{error}</div>}
 
-      <p className="section-note console-intro">
-        Delegated authority, made accountable: the agent&apos;s reads stream into a live feed,
-        every suggestion waits for your approval, and one tap pauses or revokes it. Same consent
-        machinery as any other grant — pointed at an agent.
-      </p>
-
       <div className="agent-cols">
         <section>
           <h2>Authority</h2>

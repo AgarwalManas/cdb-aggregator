@@ -6,8 +6,27 @@ import {
   issueAttestation,
   presentCredentials,
 } from "../api.js";
+import HowItWorksStrip from "../components/HowItWorksStrip.jsx";
 import { SkeletonCard } from "../components/Skeleton.jsx";
 import { useToast } from "../components/Toaster.jsx";
+
+const HOW = [
+  [
+    "fileCheck",
+    "Issue a proof",
+    "Turn a question into a signed yes/no attestation — the balances behind it never leave.",
+  ],
+  [
+    "badge",
+    "Hold it in your wallet",
+    "Credentials sit with you, browser-held. Tick only the ones a verifier actually needs.",
+  ],
+  [
+    "shieldCheck",
+    "Present & verify",
+    "The verifier checks each signature and learns the conclusion — never your data.",
+  ],
+];
 
 // Selective-disclosure attestations (item-32) + a holder wallet that presents a
 // chosen subset to a verifier (item-33). Simulated end to end: facts are
@@ -91,11 +110,12 @@ export default function CredentialsPage() {
     <>
       {error && <div className="error">{error}</div>}
 
+      <HowItWorksStrip steps={HOW} />
+
       <div className="sim-banner">
-        <strong>Simulation.</strong> Selective disclosure end to end: facts are computed and signed
-        server-side on mock data with a demo key, and the wallet is held in your browser. It
-        demonstrates the holder → verifier presentation flow (OID4VP-style) — not a real ZK proof
-        or credential wallet. Production would use W3C VC / SD-JWT and asymmetric issuer keys.
+        <strong>Simulation.</strong> Facts are computed and signed server-side on mock data with a
+        demo key; the wallet is browser-held. It demonstrates the OID4VP-style holder → verifier
+        flow — production would use W3C VC / SD-JWT and asymmetric issuer keys.
       </div>
 
       <section>

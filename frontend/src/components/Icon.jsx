@@ -127,6 +127,32 @@ const ICONS = {
       <path d="M5 12c0 1.7 3 3 7 3s7-1.3 7-3" />
     </>
   ),
+  grid: (
+    <>
+      <rect x="4" y="4" width="7" height="7" rx="1.5" />
+      <rect x="13" y="4" width="7" height="7" rx="1.5" />
+      <rect x="4" y="13" width="7" height="7" rx="1.5" />
+      <rect x="13" y="13" width="7" height="7" rx="1.5" />
+    </>
+  ),
+  at: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.9 7.9" />
+    </>
+  ),
+  copy: (
+    <>
+      <rect x="9" y="9" width="12" height="12" rx="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </>
+  ),
+  arrowRight: (
+    <>
+      <line x1="4" y1="12" x2="20" y2="12" />
+      <path d="M14 6l6 6-6 6" />
+    </>
+  ),
 };
 
 export default function Icon({ name, className }) {

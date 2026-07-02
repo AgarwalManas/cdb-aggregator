@@ -1,3 +1,4 @@
+import Icon from "./Icon.jsx";
 import ThemeToggle from "./ThemeToggle.jsx";
 
 // The app shell's left navigation (slice 1 of the layout refactor): a grouped
@@ -24,8 +25,8 @@ export default function Sidebar({ pages, groups, active, onNavigate, onReset, re
                     aria-current={active === key ? "page" : undefined}
                     onClick={() => onNavigate(key)}
                   >
+                    <Icon name={pages[key].icon} className="nav-ico" />
                     <span>{pages[key].label}</span>
-                    {group.key === "explore" && <span className="nav-tag">Demo</span>}
                   </button>
                 </li>
               ))}

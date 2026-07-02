@@ -202,18 +202,6 @@ code {
   color: var(--accent);
   font-weight: 600;
 }
-.nav-tag {
-  margin-left: auto;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--muted);
-  background: var(--surface-2);
-  border-radius: 999px;
-  padding: 1px 7px;
-}
 .side-foot {
   display: flex;
   align-items: center;
@@ -231,6 +219,63 @@ code {
   max-width: 1180px;
   margin: 0 auto;
   padding: 40px 32px 64px;
+}
+
+/* Motion: pages (and their header) glide in on navigation; cards respond
+   smoothly to hover. All of it collapses under prefers-reduced-motion. */
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.page,
+.page-head {
+  animation: pageIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.card {
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+.step:hover,
+.safer-card:hover,
+.proof:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    var(--shadow),
+    0 8px 22px rgb(0 0 0 / 0.06);
+}
+
+/* Sidebar nav icons + the topbar "Demo data" pill. */
+.nav-item .nav-ico {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  opacity: 0.85;
+}
+.nav-item {
+  gap: 10px;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+.demo-pill {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  background: var(--accent-tint);
+  border-radius: 999px;
+  padding: 7px 13px;
+  white-space: nowrap;
 }
 
 /* Trust & Privacy pages: How it works, Why this is safer, Old vs New. */
@@ -1306,10 +1351,6 @@ button:disabled {
 }
 
 /* Agent activity & authority console (item-28) */
-.console-intro {
-  margin: 0 0 20px;
-  max-width: 70ch;
-}
 .console-main {
   display: flex;
   flex-direction: column;
@@ -1513,29 +1554,220 @@ button:disabled {
   }
 }
 
-/* Portable address (item-31) */
-.address-card {
+/* "How it works" strip — numbered, icon-led steps joined by arrows. Shared by
+   the Explore pages as the same orientation ritual. */
+.hiw {
+  padding: 20px 22px;
+  margin-bottom: 18px;
+}
+.hiw-title {
+  margin: 0 0 16px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+}
+.hiw-steps {
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
   gap: 14px;
 }
-.address-card .handle {
+.hiw-step {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hiw-step strong {
+  font-size: 14px;
+}
+.hiw-step .section-note {
+  margin: 0;
+  font-size: 13px;
+}
+.hiw-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.hiw-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.hiw-icon,
+.fact-icon {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  flex: none;
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+.hiw-icon {
+  width: 38px;
+  height: 38px;
+}
+.hiw-icon svg {
+  width: 18px;
+  height: 18px;
+}
+.hiw-arrow {
+  color: var(--muted);
+  flex: none;
+  align-self: center;
+  display: grid;
+  place-items: center;
+}
+.hiw-arrow svg {
+  width: 18px;
+  height: 18px;
+}
+@media (max-width: 860px) {
+  .hiw-steps {
+    flex-direction: column;
+    gap: 18px;
+  }
+  .hiw-steps .hiw-arrow {
+    display: none;
+  }
+}
+
+/* Portable address (item-31): summary card, facts row, resolve flow. */
+.addr-summary {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+.addr-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  padding-right: 22px;
+  border-right: 1px solid var(--hairline);
+}
+.addr-cell:last-child {
+  padding-right: 0;
+  border-right: none;
+}
+.addr-actions {
+  margin-left: auto;
+  align-items: stretch;
+}
+.addr-actions button {
+  margin: 0;
+  white-space: nowrap;
+}
+.addr-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.addr-handle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.addr-handle {
   font-family: var(--font-mono);
   font-size: 22px;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--accent);
 }
-.repoint {
+.addr-summary .badge {
+  align-self: flex-start;
+}
+.icon-btn {
+  padding: 6px;
+  border: 1px solid var(--hairline);
+  background: var(--surface);
+  color: var(--muted);
+  border-radius: var(--radius-sm);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.icon-btn:not(:disabled):hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.icon-btn svg {
+  width: 15px;
+  height: 15px;
+}
+.addr-linked {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.addr-linked strong {
+  display: block;
+  font-size: 14px;
+}
+.addr-linked .muted {
+  font-size: 12.5px;
+}
+.bank-tile {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--canvas);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 16px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.addr-since {
+  font-size: 14px;
+}
+@media (max-width: 860px) {
+  .addr-summary {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .addr-cell {
+    padding-right: 0;
+    border-right: none;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .addr-cell:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+  .addr-actions {
+    margin-left: 0;
+  }
+}
+
+.repoint-panel {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  margin-bottom: 16px;
+  border-style: dashed;
+  animation: pageIn 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.repoint-label {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--muted);
+.repoint-panel .section-note {
+  margin: 0;
 }
 .repoint-options {
   display: flex;
@@ -1562,6 +1794,53 @@ button:disabled {
   font-weight: 500;
   opacity: 0.75;
 }
+
+.addr-facts {
+  display: flex;
+  gap: 22px;
+  padding: 16px 22px;
+}
+.fact {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding-right: 22px;
+  border-right: 1px solid var(--hairline);
+}
+.fact:last-child {
+  padding-right: 0;
+  border-right: none;
+}
+.fact > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.fact strong {
+  font-size: 13.5px;
+}
+.fact-icon {
+  width: 34px;
+  height: 34px;
+}
+.fact-icon svg {
+  width: 16px;
+  height: 16px;
+}
+@media (max-width: 860px) {
+  .addr-facts {
+    flex-direction: column;
+    gap: 14px;
+  }
+  .fact {
+    padding-right: 0;
+    border-right: none;
+  }
+}
+
 .resolve-section {
   display: flex;
   flex-direction: column;
@@ -1570,24 +1849,87 @@ button:disabled {
 .resolve-section h2 {
   margin: 0;
 }
-.resolution {
+.resolve-section .section-note {
+  margin: 0;
+}
+.resolve-card {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
-.resolution.denied-card {
-  opacity: 0.82;
+.resolve-flow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
-.token {
-  display: block;
+.resolve-handle {
   font-family: var(--font-mono);
-  font-size: 13px;
-  word-break: break-all;
+  font-size: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+}
+.token-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   background: var(--surface-2);
   border: 1px dashed var(--hairline);
   border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  color: var(--ink);
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  min-width: 0;
+  flex: 1;
+}
+.token-box code {
+  word-break: break-all;
+}
+.token-empty {
+  color: var(--muted);
+  font-family: var(--font-sans, inherit);
+  font-size: 13px;
+}
+.resolve-after {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.resolve-after .btn-revoke {
+  margin: 0;
+}
+.resolve-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent-tint);
+  color: var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.resolve-note svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.result-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.result-ok svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
 }
 .coords {
   margin-top: 4px;
