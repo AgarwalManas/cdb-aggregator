@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { formatDateTime } from "../format.js";
+import Icon from "./Icon.jsx";
 
 // Activity Log (slice 5.2): one table merging the audit trail and the access
 // receipts. A date-range filter, a single Filters popover exposing every column,
@@ -255,7 +256,7 @@ export default function ActivityLog({ receipts, holder = "Ada Lovelace" }) {
               className="filter-btn"
               onClick={() => setMenu(menu === "date" ? null : "date")}
             >
-              📅 {rangeLabel} ▾
+              <Icon name="calendar" /> {rangeLabel} ▾
             </button>
             {menu === "date" && (
               <div className="export-menu date-menu" role="menu">
@@ -283,7 +284,7 @@ export default function ActivityLog({ receipts, holder = "Ada Lovelace" }) {
               className="filter-btn"
               onClick={() => setMenu(menu === "filters" ? null : "filters")}
             >
-              ⚙ Filters{activeFilters ? ` (${activeFilters})` : ""}
+              <Icon name="sliders" /> Filters{activeFilters ? ` (${activeFilters})` : ""}
             </button>
             {menu === "filters" && (
               <div className="filter-panel">
@@ -331,7 +332,7 @@ export default function ActivityLog({ receipts, holder = "Ada Lovelace" }) {
               className="btn-primary export-btn"
               onClick={() => setMenu(menu === "export" ? null : "export")}
             >
-              ⬆ Export {selected.size ? `(${selected.size})` : `(${visible.length})`} ▾
+              <Icon name="download" /> Export {selected.size ? `(${selected.size})` : `(${visible.length})`} ▾
             </button>
             {menu === "export" && (
               <div className="export-menu" role="menu">
@@ -517,7 +518,7 @@ function LogRow({ receipt: r, open, selected, enhanced, meta, menuOpen, onMenu, 
               </div>
               <div className="js-menu rf-download">
                 <button type="button" className="btn-revoke" onClick={() => onMenu(!menuOpen)}>
-                  ⬇ Download ▾
+                  <Icon name="download" /> Download ▾
                 </button>
                 {menuOpen && (
                   <div className="export-menu" role="menu">

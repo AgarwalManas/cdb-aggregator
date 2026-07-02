@@ -303,7 +303,10 @@ export default function AssistantChat({ authority, refresh }) {
 
   async function handleSend(event) {
     event.preventDefault();
-    const q = input.trim();
+    send(input.trim());
+  }
+
+  async function send(q) {
     if (!q || pending) return;
     setInput("");
     const [, , topic] = intentOf(q);
@@ -447,6 +450,20 @@ export default function AssistantChat({ authority, refresh }) {
               <i />
               <i />
             </span>
+          </div>
+        )}
+        {messages.length <= 1 && !pending && (
+          <div className="chat-suggest">
+            {[
+              "What's my net worth?",
+              "List my accounts",
+              "Recent transactions",
+              "Find idle cash",
+            ].map((q) => (
+              <button key={q} type="button" className="suggest-chip" onClick={() => send(q)}>
+                {q}
+              </button>
+            ))}
           </div>
         )}
       </div>

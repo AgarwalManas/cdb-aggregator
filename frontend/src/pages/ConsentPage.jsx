@@ -92,25 +92,22 @@ export default function ConsentPage({ scopeCatalog }) {
     <>
       {error && <div className="error">{error}</div>}
 
-      {!loading && chain && (
-        <div className="cc-header">
-          <ChainVerifier chain={chain} />
-        </div>
-      )}
-
-      <nav className="subtabs" aria-label="Control Centre views">
-        {SUBTABS.map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            className={sub === key ? "active" : ""}
-            aria-current={sub === key ? "page" : undefined}
-            onClick={() => setSub(key)}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
+      <div className="subtab-row">
+        <nav className="subtabs" aria-label="Control Centre views">
+          {SUBTABS.map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              className={sub === key ? "active" : ""}
+              aria-current={sub === key ? "page" : undefined}
+              onClick={() => setSub(key)}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+        {!loading && chain && <ChainVerifier chain={chain} />}
+      </div>
 
       {sub === "connectors" && (
         <>
@@ -152,7 +149,6 @@ export default function ConsentPage({ scopeCatalog }) {
 
           {!loading && Object.keys(scopeCatalog).length > 0 && (
             <section>
-              <h2>Preview a permission</h2>
               <PermissionSimulator scopeCatalog={scopeCatalog} />
             </section>
           )}

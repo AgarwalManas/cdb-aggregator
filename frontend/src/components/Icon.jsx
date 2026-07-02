@@ -171,6 +171,21 @@ const ICONS = {
       <path d="M13 6l6 6-6 6" />
     </>
   ),
+  calendar: (
+    <>
+      <rect x="4" y="5" width="16" height="16" rx="2" />
+      <line x1="4" y1="10" x2="20" y2="10" />
+      <line x1="9" y1="3" x2="9" y2="7" />
+      <line x1="15" y1="3" x2="15" y2="7" />
+    </>
+  ),
+  download: (
+    <>
+      <path d="M12 4v11" />
+      <path d="M7 11l5 5 5-5" />
+      <path d="M5 20h14" />
+    </>
+  ),
 };
 
 export default function Icon({ name, className }) {

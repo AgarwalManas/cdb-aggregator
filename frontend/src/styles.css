@@ -111,6 +111,12 @@ code {
   font-variant-numeric: tabular-nums;
 }
 
+/* Native controls carry the accent, never the browser's blue. */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--accent);
+}
+
 /* Visible keyboard focus everywhere (quality floor). */
 :focus-visible {
   outline: 2px solid var(--accent);
@@ -941,6 +947,10 @@ button:disabled {
   flex-direction: column;
   gap: 12px;
   border-style: dashed;
+}
+.connect-form .btn-primary {
+  align-self: flex-start;
+  min-width: 180px;
 }
 .connect-form h3 {
   margin: 0;
@@ -2652,10 +2662,22 @@ tr.row-open > td {
 }
 
 /* Compact log-integrity card + richer Activity Log (slice 5.2) */
-.cc-header {
+/* Sub-tabs and the compact log-integrity card share one row. */
+.subtab-row {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: 24px;
+}
+.subtab-row .subtabs {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+.subtab-row .log-integrity {
+  margin-bottom: 8px;
 }
 .log-integrity {
   display: flex;
@@ -2736,6 +2758,22 @@ tr.row-open > td {
   color: var(--ink-soft);
   font-weight: 500;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.filter-btn svg,
+.export-btn svg,
+.rf-download .btn-revoke svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+.export-btn,
+.rf-download .btn-revoke {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 .filter-btn:hover {
   border-color: var(--accent);
@@ -3132,6 +3170,58 @@ tr.row-open > td {
   .chat-ctx {
     margin-left: 0;
   }
+}
+.chat-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+.suggest-chip {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 8px 14px;
+}
+.suggest-chip:hover {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+
+/* The agent's name leads with its icon, on-palette (no emoji). */
+.agent-name {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.agent-ico {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-tint);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.agent-ico svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Dashboard card footer — pinned below the content, filling the grid row. */
+.dash-card .card-foot {
+  margin-top: auto;
+  padding-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 13px;
 }
 
 /* Honour reduced-motion preferences. */

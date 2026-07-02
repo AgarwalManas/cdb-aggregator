@@ -79,6 +79,10 @@ export default function DashboardPage({ onNavigate }) {
           </div>
           <p className="handle-sm">{alias.handle}</p>
           <p className="section-note">Routes to {alias.target.display}</p>
+          <p className="section-note">
+            Share this instead of bank details — counterparties only ever see a one-time token,
+            never this account.
+          </p>
           <button type="button" className="btn-revoke" onClick={() => onNavigate("address")}>
             Manage address
           </button>
@@ -155,6 +159,12 @@ export default function DashboardPage({ onNavigate }) {
               );
             })}
           </ul>
+          <div className="card-foot">
+            <span className="muted">Each source is a separate, revocable grant.</span>
+            <button type="button" className="link" onClick={() => onNavigate("control")}>
+              Connect another source →
+            </button>
+          </div>
         </section>
 
         <div className="dash-side">

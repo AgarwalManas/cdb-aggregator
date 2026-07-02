@@ -1,5 +1,6 @@
 import { expiryLabel } from "../format.js";
 import ConfirmButton from "./ConfirmButton.jsx";
+import Icon from "./Icon.jsx";
 import ScopeChip from "./ScopeChip.jsx";
 
 // The authority card (item-28): the scoped authority the agent holds right now —
@@ -25,7 +26,12 @@ export default function AuthorityCard({
   return (
     <div className="card authority">
       <div className="card-head">
-        <h3>🤖 {authority.agentName}</h3>
+        <h3 className="agent-name">
+          <span className="agent-ico">
+            <Icon name="sparkle" />
+          </span>
+          {authority.agentName}
+        </h3>
         <span className={`badge status-${authority.paused && active ? "pending" : badgeClass}`}>
           {badgeText}
         </span>
