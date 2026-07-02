@@ -1,12 +1,12 @@
 import Icon from "./Icon.jsx";
-import ThemeToggle from "./ThemeToggle.jsx";
 
 // The app shell's left navigation (slice 1 of the layout refactor): a grouped
 // sidebar — the product, then the clearly-quarantined "Explore (Demo)" frontier
-// features, then "How it works" explainers.
-export default function Sidebar({ pages, groups, active, onNavigate, onReset, resetting }) {
+// features, then the "Trust & Privacy" explainers. Collapsible to an icon-only
+// rail; labels come back as tooltips.
+export default function Sidebar({ pages, groups, active, onNavigate, collapsed, onToggleCollapse }) {
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
       <div className="brand">
         <span className="brand-mark" aria-hidden="true" />
         <span className="brand-name">CDB Aggregator</span>
@@ -23,10 +23,11 @@ export default function Sidebar({ pages, groups, active, onNavigate, onReset, re
                     type="button"
                     className={`nav-item ${active === key ? "active" : ""}`}
                     aria-current={active === key ? "page" : undefined}
+                    title={collapsed ? pages[key].label : undefined}
                     onClick={() => onNavigate(key)}
                   >
                     <Icon name={pages[key].icon} className="nav-ico" />
-                    <span>{pages[key].label}</span>
+                    <span className="nav-label">{pages[key].label}</span>
                   </button>
                 </li>
               ))}
@@ -38,14 +39,14 @@ export default function Sidebar({ pages, groups, active, onNavigate, onReset, re
       <div className="side-foot">
         <button
           type="button"
-          className="reset-demo"
-          onClick={onReset}
-          disabled={resetting}
-          title="Restore the demo to its seeded state. Only affects your session."
+          className="collapse-btn"
+          onClick={onToggleCollapse}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {resetting ? "Resetting…" : "Reset demo"}
+          <Icon name={collapsed ? "chevronsRight" : "chevronsLeft"} />
+          <span className="nav-label">Collapse</span>
         </button>
-        <ThemeToggle />
       </div>
     </aside>
   );

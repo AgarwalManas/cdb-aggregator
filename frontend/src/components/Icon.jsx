@@ -153,6 +153,24 @@ const ICONS = {
       <path d="M14 6l6 6-6 6" />
     </>
   ),
+  send: (
+    <>
+      <path d="M21 3L10.5 13.5" />
+      <path d="M21 3l-7 18-3.5-7.5L3 10l18-7z" />
+    </>
+  ),
+  chevronsLeft: (
+    <>
+      <path d="M11 6l-6 6 6 6" />
+      <path d="M18 6l-6 6 6 6" />
+    </>
+  ),
+  chevronsRight: (
+    <>
+      <path d="M6 6l6 6-6 6" />
+      <path d="M13 6l6 6-6 6" />
+    </>
+  ),
 };
 
 export default function Icon({ name, className }) {

@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 
 import { getScopes, resetDemo } from "./api.js";
+import { CHAT_STORAGE_KEY } from "./components/AssistantChat.jsx";
 import Sidebar from "./components/Sidebar.jsx";
+import ThemeToggle from "./components/ThemeToggle.jsx";
 import AddressPage from "./pages/AddressPage.jsx";
 import AgentPage from "./pages/AgentPage.jsx";
 import ComparePage from "./pages/ComparePage.jsx";
@@ -40,7 +42,7 @@ const PAGES = {
     label: "Assistant",
     icon: "sparkle",
     title: "Assistant",
-    subtitle: "Delegate a scoped, revocable task to an agent — it suggests, it never acts.",
+    subtitle: "Ask, delegate, and decide in one conversation — it suggests, it never acts.",
   },
   address: {
     group: "explore",
@@ -91,6 +93,9 @@ export default function App() {
   const [page, setPage] = useState("dashboard");
   const [scopeCatalog, setScopeCatalog] = useState({});
   const [resetting, setResetting] = useState(false);
+  const [collapsed, setCollapsed] = useState(
+    () => localStorage.getItem("cdb-sidebar") === "collapsed",
+  );
 
   useEffect(() => {
     getScopes()
@@ -98,10 +103,18 @@ export default function App() {
       .catch(() => setScopeCatalog({}));
   }, []);
 
+  function toggleCollapsed() {
+    setCollapsed((v) => {
+      localStorage.setItem("cdb-sidebar", v ? "expanded" : "collapsed");
+      return !v;
+    });
+  }
+
   async function handleReset() {
     setResetting(true);
     try {
       await resetDemo();
+      sessionStorage.removeItem(CHAT_STORAGE_KEY); // the assistant chat restarts too
       window.location.reload(); // refetch every page from the freshly-seeded world
     } catch {
       setResetting(false);
@@ -117,8 +130,8 @@ export default function App() {
         groups={GROUPS}
         active={page}
         onNavigate={setPage}
-        onReset={handleReset}
-        resetting={resetting}
+        collapsed={collapsed}
+        onToggleCollapse={toggleCollapsed}
       />
 
       <div className="main">
@@ -130,6 +143,16 @@ export default function App() {
             </div>
             <div className="topbar-right">
               <span className="demo-pill">Demo data</span>
+              <button
+                type="button"
+                className="reset-demo"
+                onClick={handleReset}
+                disabled={resetting}
+                title="Restore the demo to its seeded state. Only affects your session."
+              >
+                {resetting ? "Resetting…" : "Reset demo"}
+              </button>
+              <ThemeToggle />
               <div className="who">
                 <span className="avatar">AL</span>
                 <div>
