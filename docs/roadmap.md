@@ -4,8 +4,9 @@
 landing as one commit tagged `item-NN` so the history reads as a navigable
 timeline — `git checkout item-07` to see the consent layer in isolation, `item-22`
 for the hash chain, and so on. This file is the map: the **core build** (Items
-1–14) and the **follow-on** that refined and extended it (Items 15–33). All of it
-is complete. For the regulatory and standards context, see
+1–14), the **follow-on** that refined and extended it (Items 15–33), and a later
+**experience redesign** (Track 4) that reorganized the front end. All of it is
+complete. For the regulatory and standards context, see
 [`research-report.md`](research-report.md).
 
 ## Principles carried throughout
@@ -193,3 +194,40 @@ hardening items `item-23`–`item-27`, and Track 3: the standouts are `item-28`
 (agent console) and `item-31` (portable alias); `item-30` builds directly on
 `item-22`, `item-29` pairs with `item-17`, and the simulations `item-32`/`item-33`
 come last and stay clearly labelled.
+
+---
+
+## Track 4 — Experience redesign (post-item-33)
+
+A front-end reorganization on top of the finished feature set — same design
+language and honest-scope ethos, no backend change (coverage stays at 100%, the
+API surface is untouched). Shipped as refinement slices rather than individually
+tagged items; the features from Tracks 1–3 are unchanged, but where they live and
+how they read is reworked.
+
+- **App shell → sidebar.** The tabbed layout becomes a left **sidebar shell** with
+  grouped navigation — the product (Dashboard, Bank Accounts, Control Centre,
+  Assistant), a quarantined **Explore (Demo)** group (Portable Address,
+  Credentials), and a **Trust & Privacy** group (How it works, Why this is safer,
+  Old vs New). The sidebar collapses to an icon rail and carries a page search in
+  its header (Claude-style); a top bar holds the title, a **Demo data** pill,
+  **Reset demo**, and the theme toggle.
+- **Dashboard.** A new at-a-glance landing page — connection/consent/access stats,
+  the portable address, recent activity, a "data you've shared" breakdown,
+  connected sources, net worth, and log integrity — each tile deep-linking into
+  the page that owns it.
+- **Control Centre.** The old consent + traceability tab, split into *Connectors*
+  (per-source cards with a bank tile, scopes, expiry, revoke, an access preview,
+  connect-a-source, and the permission simulator) and *Activity Logs* (the merged
+  audit + receipts table). Receipts are rewritten from a key/value dump into a
+  plain-language sentence plus four labelled facts (what they saw / kept private /
+  under what authority / system note), with a redesigned per-receipt PDF export.
+- **Assistant → chat.** The authority console gains a **Chat** view: one
+  persistent, scripted (no-LLM) conversation over the consent-gated data, with
+  inline delegate/approve actions and a visible **context budget** that compresses
+  older turns past a token limit. The console itself moves to an **Activity** tab.
+- **Trust & Privacy pages.** The old-vs-new contrast is joined by *How it works*
+  (the six-step journey) and *Why this is safer*, grouped as first-run explainers.
+- **Aesthetic passes.** A monochrome inline-SVG icon set, on-palette native
+  controls, motion on navigation, and a full page-by-page cleanup for a clean,
+  minimal, first-time-legible surface.

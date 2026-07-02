@@ -36,36 +36,49 @@ claiming certified connectivity.
 
 The demo seeds one customer with three connected sources of deliberately different
 shape: a clean FDX bank, a messy legacy bank, and a screen-scraped "OldBank".
-Everything reads through the consent gate. There are six tabs.
+Everything reads through the consent gate. The UI is a left **sidebar shell** with
+grouped navigation — the product, a clearly-quarantined demo frontier, and the
+explainers — and a top bar with a **Demo data** pill, **Reset demo**, and the
+light/dark toggle.
 
-- **Overview** shows household net worth ($29,328.65), merged accounts grouped by
-  source, and a merged transaction feed. The mortgage reads *"balance not shared"*
-  and is **excluded** from net worth — its connection was granted transactions but
-  **not** balances. Consent, not connectivity, decides what you see.
-- **Consent & Traceability** lists the connections; revoking one flips it to
-  REVOKED instantly and its data disappears from Overview. The audit log records
-  every access — allowed *and* denied — tied to the grant it relied on, showing
-  what was disclosed and what was withheld, and *who* accessed. The log is a
-  SHA-256 hash chain, and a **"Verify integrity"** control recomputes every link
-  **in the browser** (Web Crypto) — append-only you can check, not just assert.
-  Below it, **access receipts** re-render each access in plain language, and a
-  **permission simulator** previews what a scope would share before you grant it.
-- **Assistant** delegates a scoped, revocable task to an agent; it finds
-  **$18,010.55** in idle cash and estimates **~$414/year** from a move. It
-  **suggests, it never acts** — each run lands in an **approval queue**, and an
-  **authority console** streams the agent's reads with a Pause / Revoke card.
-  Revoke the delegation and a run returns `403`: no consent, no agent. Its reads
-  sit in the same audit log, attributed to the assistant.
-- **Portable address** gives the user a bank-neutral alias (`ada.cdb`) that
-  resolves to a **one-time routing token** — never the bank, branch, or account
-  number. Resolution is consent-gated: revoke the target account's grant and the
-  same lookup returns nothing.
-- **Old vs New** is a side-by-side contrast of credential screen-scraping and
-  token-based FDX access.
-- **Credentials** *(labelled a simulation)* proves a derived fact — "holds ≥ $10k
-  in liquid assets" — and shares only the signed conclusion, not the balances. The
-  attestation goes into a wallet and a **selected** subset can be presented to a
-  verifier, which rejects a tampered copy on its signature.
+- **Dashboard** is the at-a-glance landing: active connections, data categories
+  shared, access counts, the portable address, recent activity, a "data you've
+  shared" breakdown, connected sources, net worth, and log integrity — each tile
+  deep-linking into the page that owns it.
+- **Bank Accounts** shows household net worth ($29,328.65), merged accounts grouped
+  by source, and a merged transaction feed. The mortgage reads *"balance not
+  shared"* and is **excluded** from net worth — its connection was granted
+  transactions but **not** balances. Consent, not connectivity, decides what you
+  see.
+- **Control Centre** splits into *Connectors* and *Activity Logs*. Connectors lists
+  the connections; revoking one flips it to REVOKED instantly and its data
+  disappears from Bank Accounts. Activity Logs records every access — allowed *and*
+  denied — tied to the grant it relied on; expanding a row opens a **plain-language
+  receipt** (who read what, for which account, under which grant, what they saw vs
+  kept private). The log is a SHA-256 hash chain, and a compact **"Verify
+  integrity"** control recomputes every link **in the browser** (Web Crypto) —
+  append-only you can check, not just assert. A **permission simulator** previews
+  what a scope would share before you grant it.
+- **Assistant** is a **Chat** and an **Activity** view. Chat is a single,
+  persistent conversation — a **scripted demo (no LLM)** that answers from your
+  consent-gated data and carries a visible **context budget** that compresses
+  older turns past a token limit; you delegate and approve/reject inline. It finds
+  **$18,010.55** in idle cash and estimates **~$414/year** from a move, and it
+  **suggests, it never acts**. Activity is the **authority console** — a live
+  action feed, a Pause / Revoke card, and an approval queue. Revoke the delegation
+  and a run returns `403`: no consent, no agent. Its reads sit in the same audit
+  log, attributed to the assistant.
+- **Portable Address** *(Explore)* gives the user a bank-neutral alias (`ada.cdb`)
+  that resolves to a **one-time routing token** — never the bank, branch, or
+  account number. Resolution is consent-gated: revoke the target account's grant
+  and the same lookup returns nothing.
+- **Credentials** *(Explore, labelled a simulation)* proves a derived fact — "holds
+  ≥ $10k in liquid assets" — and shares only the signed conclusion, not the
+  balances. The attestation goes into a wallet and a **selected** subset can be
+  presented to a verifier, which rejects a tampered copy on its signature.
+- **Trust & Privacy** collects three explainers — *How it works*, *Why this is
+  safer*, and *Old vs New*, a side-by-side contrast of credential screen-scraping
+  and token-based FDX access.
 
 ## Architecture
 

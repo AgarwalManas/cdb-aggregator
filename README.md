@@ -153,8 +153,8 @@ simulations** — they demonstrate a pattern, not real infrastructure.
                                                         ▼
                          ┌─────────────────────────────────────────────────┐
    React client  ◀─REST─ │  CONSENT + TRACEABILITY GATE                     │
-   6 views, all          │  every read → active in-scope grant? → minimize  │
-   through the gate      │  → append-only, hash-chained audit (who, what,   │
+   sidebar shell,        │  every read → active in-scope grant? → minimize  │
+   all through the gate  │  → append-only, hash-chained audit (who, what,   │
                          │     withheld) — verifiable in the browser        │
                          └─────────────────────────────────────────────────┘
                                                         ▲
@@ -185,9 +185,10 @@ cdb-aggregator/
 │   │   └── api/                # HTTP API: consent, aggregation, agent,
 │   │                           #  receipts, alias, attestations         (Items 9–11, 28–33)
 │   └── tests/                  # pytest suite (100% coverage)
-├── frontend/                   # React (Vite): 6 tabs — Overview, Consent &
-│                               #  Traceability, Assistant, Old vs New,
-│                               #  Portable address, Credentials
+├── frontend/                   # React (Vite): sidebar shell, grouped nav —
+│                               #  Dashboard, Bank Accounts, Control Centre,
+│                               #  Assistant (chat + activity); Explore: Portable
+│                               #  Address, Credentials; Trust & Privacy explainers
 ├── docs/
 │   ├── adr/                    # architecture decision records
 │   ├── screen-scraping.md      # "why screen-scraping is about to break"
@@ -225,22 +226,29 @@ uvicorn app.main:app --reload --app-dir backend      # http://127.0.0.1:8000
 cd frontend && npm install && npm run dev            # http://localhost:5173
 ```
 
-Six tabs, all reading through the consent gate:
+A left sidebar shell with grouped navigation, all reading through the consent gate:
 
-- **Overview** — household net worth, merged accounts, merged transaction feed.
-- **Consent & Traceability** — connections, scopes, expiry, one-tap revoke, the
-  audit log (with *who* accessed — aggregator vs. delegated agent), the in-browser
-  **chain verifier**, a **permission simulator**, and **access receipts**.
-- **Assistant** — delegate a scoped, revocable task to the idle-cash agent, then
-  the **authority console**: live action feed, Pause / Revoke, and an approval
-  queue. It suggests, it never acts.
-- **Old vs New** — a side-by-side contrast of credential screen-scraping and
-  token-based FDX access.
-- **Portable address** — a bank-neutral alias resolved to a one-time routing
-  token, never your account; consent-gated, with a resolution history.
-- **Credentials** *(simulation)* — prove a fact without sharing the data behind
-  it, hold the signed attestation in a wallet, and present a selected subset to a
-  verifier.
+- **Dashboard** — the at-a-glance overview: connections, data categories shared,
+  access counts, your portable address, recent activity, net worth, and log
+  integrity — each tile deep-linking into the page that owns it.
+- **Bank Accounts** — household net worth, merged accounts, merged transaction feed.
+- **Control Centre** — *Connectors* (connections, scopes, expiry, one-tap revoke, a
+  per-source access preview, connect-a-source, and a **permission simulator**) and
+  *Activity Logs* (the audit + receipts table with *who* accessed — aggregator vs.
+  delegated agent — plain-language receipts, export, and the in-browser **chain
+  verifier**).
+- **Assistant** — *Chat*, a single scripted (no-LLM) conversation over your
+  consent-gated data with a visible context budget, where you delegate and
+  approve inline; and *Activity*, the **authority console** (live action feed,
+  Pause / Revoke, approval queue). It suggests, it never acts.
+- **Portable Address** *(Explore)* — a bank-neutral alias resolved to a one-time
+  routing token, never your account; consent-gated, with a resolution history.
+- **Credentials** *(Explore, simulation)* — prove a fact without sharing the data
+  behind it, hold the signed attestation in a wallet, and present a selected
+  subset to a verifier.
+- **Trust & Privacy** — three explainers: *How it works*, *Why this is safer*, and
+  *Old vs New* (a side-by-side contrast of credential screen-scraping and
+  token-based FDX access).
 
 ### Run it as one service (prod-style)
 
@@ -335,6 +343,7 @@ A follow-on continues the same one-item-per-tag cadence (all in
 | **UI refinement** | 15–21 | Design system, dark mode, log controls, states, minimization signature, screen-scraping visual, accessibility |
 | **Hardening** | 22–27 | Hash-chained audit log, FAPI (PAR + PKCE), property-based tests, SQLite persistence, threat model, FDX schema conformance |
 | **Consent frontier** | 28–33 | Agent authority console; portable alias; user-verifiable audit log; access receipts + permission simulation; selective-disclosure + VC wallet *(simulated)* |
+| **Experience redesign** | Track 4 | Sidebar shell + grouped nav, Dashboard, Control Centre (Connectors / Activity Logs), chat-style Assistant, Trust & Privacy pages, readable receipts — front-end only (see [`docs/roadmap.md`](docs/roadmap.md)) |
 
 ```bash
 git tag                      # item-01 … item-33

@@ -36,7 +36,7 @@ The bundled engine (an idle-cash finder) is deterministic and unit-tested;
 
 ## Consequences
 
-- Agent access is attributable in the audit log ("🤖 Assistant" vs the aggregator).
+- Agent access is attributable in the audit log ("The assistant" vs the aggregator).
 - The differentiator reuses the star feature instead of bolting on a side-system.
 - Non-determinism and API cost are avoided by defaulting to a deterministic engine;
   an LLM-backed mode can be added behind a flag later.
